@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IRIS Energy Platform Prototype</title>
+  <style>
+    :root {
+      --bg: #08111b;
+      --bg-soft: #0d1825;
+      --panel: rgba(14, 24, 37, 0.88);
+      --panel-2: rgba(18, 30, 46, 0.94);
+      --line: rgba(255,255,255,0.08);
+      --text: #edf4ff;
+      --muted: #8da0b8;
+      --pv: #f5c24b;
+      --battery: #4f8cff;
+      --load: #45d483;
+      --grid: #ff6978;
+      --feed: #29d6c7;
+      --leg: #9b6dff;
+      --warn: #ff9b48;
+      --radius: 24px;
+      --shadow: 0 24px 60px rgba(0,0,0,0.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; background: radial-gradient(circle at top, #13283f 0%, #08111b 36%, #060c14 100%); color: var(--text); }
+    body { min-height: 100vh; }
+    .app { max-width: 1600px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+    .topbar, .panel, .metric, .timeline-card, .detail-card { backdrop-filter: blur(18px); background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .topbar { border-radius: 28px; padding: 18px 20px; display:flex; align-items:center; justify-content:space-between; gap: 16px; position: sticky; top: 10px; z-index: 20; }
+    .brand { display:flex; align-items:center; gap:14px; }
+    .logo { width:42px; height:42px; border-radius:14px; background: linear-gradient(145deg, #102742, #0b1623); display:grid; place-items:center; box-shadow: inset 0 0 22px rgba(79,140,255,.22); }
+    .logo::before { content:""; width:18px; height:18px; border-radius:7px; background: conic-gradient(from 180deg, var(--pv), var(--battery), var(--feed), var(--leg), var(--pv)); }
+    .brand h1 { margin:0; font-size: 1.05rem; letter-spacing: .14em; }
+    .brand p, .topmeta, .subtle { margin:0; color: var(--muted); font-size:.88rem; }
+    .topmeta { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:10px; }
+    .pill { padding:8px 12px; border-radius:999px; border:1px solid var(--line); background: rgba(255,255,255,.03); }
+    .main { display:grid; grid-template-columns: 1.15fr .85fr; gap:16px; }
+    .left, .right { display:grid; gap:16px; }
+    .stats { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+    .metric { border-radius: 22px; padding: 16px; min-height: 118px; cursor:pointer; transition: .25s ease; }
+    .metric:hover, .node:hover, .tree-item:hover, .participant:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.16); }
+    .metric .label { color: var(--muted); font-size:.82rem; margin-bottom:10px; }
+    .metric .value { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; }
+    .metric .delta { font-size:.82rem; color:#b6c4d8; }
+    .metric[data-tone="pv"] { box-shadow: inset 0 0 0 1px rgba(245,194,75,.12), inset 0 0 40px rgba(245,194,75,.06); }
+    .metric[data-tone="battery"] { box-shadow: inset 0 0 0 1px rgba(79,140,255,.12), inset 0 0 40px rgba(79,140,255,.06); }
+    .metric[data-tone="load"] { box-shadow: inset 0 0 0 1px rgba(69,212,131,.12), inset 0 0 40px rgba(69,212,131,.06); }
+    .metric[data-tone="grid"] { box-shadow: inset 0 0 0 1px rgba(255,105,120,.12), inset 0 0 40px rgba(255,105,120,.06); }
+    .panel { border-radius: 30px; padding: 18px; }
+    .panel-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom: 14px; }
+    .panel-head h2 { margin:0; font-size:1.05rem; }
+    .panel-head p { margin:4px 0 0; color:var(--muted); font-size:.86rem; }
+    .flow-wrap { position: relative; min-height: 520px; overflow:hidden; border-radius: 24px; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.03), transparent 54%), linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)); }
+    svg { width:100%; height:100%; min-height:520px; display:block; }
+    .node { cursor:pointer; }
+    .node circle, .node rect { fill: rgba(12,21,32,.96); stroke: rgba(255,255,255,.08); stroke-width:1.2; }
+    .node .title { font-size: 14px; fill:#dce7f7; font-weight:600; }
+    .node .sub { font-size: 12px; fill:#90a4bd; }
+    .path { fill:none; stroke-linecap:round; opacity: .95; }
+    .path.pv { stroke: var(--pv); }
+    .path.battery { stroke: var(--battery); }
+    .path.load { stroke: var(--load); }
+    .path.grid { stroke: var(--grid); }
+    .path.feed { stroke: var(--feed); }
+    .path.leg { stroke: var(--leg); }
+    .particle { fill: none; stroke: rgba(255,255,255,.65); stroke-width: 2; stroke-linecap:round; stroke-dasharray: 2 10; }
+    .glow { filter: drop-shadow(0 0 10px currentColor); }
+    .legend { display:flex; flex-wrap:wrap; gap:10px; margin-top: 12px; }
+    .legend span { display:flex; gap:8px; align-items:center; color:var(--muted); font-size:.82rem; }
+    .dot { width:10px; height:10px; border-radius:50%; }
+    .timeline-card, .detail-card { border-radius: 28px; padding: 18px; }
+    .timeline-toolbar { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom: 14px; }
+    .segmented { display:flex; gap:8px; flex-wrap:wrap; }
+    .segmented button, .role-select button { background: rgba(255,255,255,.03); color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:9px 12px; cursor:pointer; }
+    .segmented button.active, .role-select button.active { color:var(--text); background: rgba(79,140,255,.14); border-color: rgba(79,140,255,.28); }
+    .chart { position:relative; height: 240px; border-radius: 22px; overflow:hidden; background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.05); }
+    .chart svg { min-height:240px; }
+    .scrubber { width:100%; margin-top: 14px; accent-color: var(--battery); }
+    .range-info { display:flex; justify-content:space-between; align-items:center; gap:10px; color:var(--muted); font-size:.82rem; margin-top:8px; }
+    .events { display:grid; gap:10px; margin-top:14px; }
+    .event { padding:12px 14px; border-radius:18px; background: rgba(255,255,255,.03); border:1px solid var(--line); display:flex; justify-content:space-between; gap:12px; }
+    .event strong { font-size:.92rem; }
+    .event span { color:var(--muted); font-size:.82rem; }
+    .detail-grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+    .detail-card h3 { margin:0 0 4px; font-size:1rem; }
+    .kv { display:grid; gap:10px; margin-top:14px; }
+    .kv div { display:flex; justify-content:space-between; gap:10px; font-size:.92rem; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,.05); }
+    .tree, .participants { display:grid; gap:8px; margin-top: 12px; }
+    .tree-item, .participant { padding:12px 14px; border-radius:16px; background: rgba(255,255,255,.03); border:1px solid var(--line); cursor:pointer; }
+    .tree-item small, .participant small { color:var(--muted); display:block; margin-top:4px; }
+    .indent-1 { margin-left: 14px; }
+    .indent-2 { margin-left: 28px; }
+    .indent-3 { margin-left: 42px; }
+    .mobile-tabs { display:none; }
+    @media (max-width: 1180px) {
+      .main { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .app { padding: 10px; }
+      .topbar { padding: 14px; border-radius: 22px; align-items:flex-start; flex-direction:column; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .metric { min-height: 104px; padding: 14px; }
+      .metric .value { font-size: 1.45rem; }
+      .panel, .timeline-card, .detail-card { padding: 14px; border-radius: 22px; }
+      .flow-wrap, svg { min-height: 420px; }
+      .mobile-tabs { display:flex; gap:8px; overflow:auto; padding-bottom:4px; }
+      .mobile-tabs button { white-space:nowrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>IRIS ENERGY PLATFORM</h1>
+          <p>Interaktive Energiefluss- und Teilnehmervisualisierung</p>
+        </div>
+      </div>
+      <div class="topmeta">
+        <div class="pill" id="activeTimeLabel">15.05.2026 · 14:25</div>
+        <div class="pill" id="roleLabel">Rolle: Admin</div>
+        <div class="pill">MQTT-ready UI Prototype</div>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="left">
+        <div class="stats" id="metricGrid"></div>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Live Energiefluss</h2>
+              <p>Touch-/Klick-Navigation direkt über Energieobjekte und Flüsse</p>
+            </div>
+            <div class="mobile-tabs segmented" id="quickTargets"></div>
+          </div>
+          <div class="flow-wrap">
+            <svg viewBox="0 0 980 560" id="flowSvg" aria-label="Energieflussvisualisierung">
+              <defs>
+                <marker id="arrow-pv" markerWidth="14" markerHeight="14" refX="10" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--pv)"/></marker>
+                <marker id="arrow-battery" markerWidth="14" markerHeight="14" refX="10" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--battery)"/></marker>
+                <marker id="arrow-load" markerWidth="14" markerHeight="14" refX="10" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--load)"/></marker>
+                <marker id="arrow-grid" markerWidth="14" markerHeight="14" refX="10" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--grid)"/></marker>
+                <marker id="arrow-feed" markerWidth="14" markerHeight="14" refX="10" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--feed)"/></marker>
+                <marker id="arrow-leg" markerWidth="14" markerHeight="14" refX="10" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--leg)"/></marker>
+              </defs>
+              <g id="flowPaths"></g>
+              <g id="flowNodes"></g>
+            </svg>
+          </div>
+          <div class="legend">
+            <span><i class="dot" style="background:var(--pv)"></i>PV</span>
+            <span><i class="dot" style="background:var(--battery)"></i>Batterie</span>
+            <span><i class="dot" style="background:var(--load)"></i>Hausverbrauch</span>
+            <span><i class="dot" style="background:var(--grid)"></i>Netzbezug</span>
+            <span><i class="dot" style="background:var(--feed)"></i>Netzeinspeisung</span>
+            <span><i class="dot" style="background:var(--leg)"></i>LEG / vZEV</span>
+            <span><i class="dot" style="background:var(--warn)"></i>Warnung</span>
+          </div>
+        </section>
+
+        <section class="timeline-card">
+          <div class="panel-head">
+            <div>
+              <h2>Zeitprofil / Zeitreise</h2>
+              <p>5 Min · 10 Min · Stunde · Tag · Woche · Monat mit Zeitfenster-Auswertung</p>
+            </div>
+          </div>
+          <div class="timeline-toolbar">
+            <div class="segmented" id="resolutionTabs"></div>
+            <div class="role-select segmented" id="roleTabs"></div>
+          </div>
+          <div class="chart" id="timelineChart"></div>
+          <input class="scrubber" id="timeSlider" type="range" min="0" max="7" value="3" />
+          <div class="range-info">
+            <span id="scrubLabel">Zeitpunkt: 14:25</span>
+            <span id="windowSummary">Fenster 12:00–18:00 · PV 58.2 kWh · Eigenverbrauch 73%</span>
+          </div>
+          <div class="events" id="eventList"></div>
+        </section>
+      </section>
+
+      <section class="right">
+        <section class="detail-card">
+          <div class="panel-head">
+            <div>
+              <h2 id="detailTitle">Objekt-Detail</h2>
+              <p id="detailSubtitle">Klicke auf Kennzahlen, Flüsse, Geräte oder Teilnehmer</p>
+            </div>
+          </div>
+          <div class="detail-grid">
+            <div>
+              <h3>Analyse</h3>
+              <div class="kv" id="detailKpis"></div>
+            </div>
+            <div>
+              <h3>Verbraucherstruktur</h3>
+              <div class="tree" id="consumerTree"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-card">
+          <div class="panel-head">
+            <div>
+              <h2>LEG / vZEV Teilnehmer</h2>
+              <p>Lokale Eigenverbrauchsquote, Liefer-/Bezugssicht und Energieherkunft</p>
+            </div>
+          </div>
+          <div class="participants" id="participantList"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const views = [
+      {
+        time: '06:15', stamp: '15.05.2026 · 06:15',
+        metrics: { pv: 3.8, house: 8.6, soc: 82, battery: -4.2, grid: 0.6, export: 0, self: 94, autarky: 93, dayPv: 9.8, dayLoad: 21.4 },
+        flows: { pvHouse: 3.8, pvBattery: 0, pvGrid: 0, batteryHouse: 4.2, gridHouse: 0.6, legParticipants: 1.1, vzevParticipants: 0.8 },
+        events: [
+          ['06:05', 'Batterie wechselte auf Entladung', 'Versorgt Morgenlasten aus Speicher'],
+          ['06:10', 'Wärmepumpe gestartet', 'Anlauf 3.1 kW'],
+          ['06:15', 'Hoher Eigenverbrauch', '93% lokal genutzt']
+        ]
+      },
+      {
+        time: '09:10', stamp: '15.05.2026 · 09:10',
+        metrics: { pv: 16.4, house: 10.1, soc: 76, battery: 4.8, grid: 0, export: 1.5, self: 81, autarky: 100, dayPv: 34.1, dayLoad: 42.0 },
+        flows: { pvHouse: 10.1, pvBattery: 4.8, pvGrid: 1.5, batteryHouse: 0, gridHouse: 0, legParticipants: 2.4, vzevParticipants: 1.2 },
+        events: [
+          ['08:55', 'Wallbox gestartet', 'Ladung auf 7.2 kW begrenzt'],
+          ['09:00', 'LEG Bezug aktiv', 'Haus A nutzt lokale Überschüsse'],
+          ['09:10', 'Batterie lädt', 'PV-Überschuss in Speicher']
+        ]
+      },
+      {
+        time: '12:40', stamp: '15.05.2026 · 12:40',
+        metrics: { pv: 34.2, house: 14.8, soc: 91, battery: 6.3, grid: 0, export: 7.6, self: 67, autarky: 100, dayPv: 78.5, dayLoad: 61.7 },
+        flows: { pvHouse: 14.8, pvBattery: 6.3, pvGrid: 7.6, batteryHouse: 0, gridHouse: 0, legParticipants: 3.8, vzevParticipants: 2.1 },
+        events: [
+          ['12:05', 'Peak erkannt', 'PV-Spitze 36.8 kW'],
+          ['12:20', 'Regelenergie aktiv', 'Batterie puffert Mittagsspitze'],
+          ['12:40', 'Netzeinspeisung verteilt', 'Öffentliches Netz + LEG + vZEV']
+        ]
+      },
+      {
+        time: '14:25', stamp: '15.05.2026 · 14:25',
+        metrics: { pv: 28.7, house: 12.9, soc: 88, battery: 5.1, grid: 0, export: 4.7, self: 72, autarky: 100, dayPv: 92.8, dayLoad: 74.5 },
+        flows: { pvHouse: 12.9, pvBattery: 5.1, pvGrid: 4.7, batteryHouse: 0, gridHouse: 0, legParticipants: 3.2, vzevParticipants: 1.8 },
+        events: [
+          ['14:05', 'Hoher Eigenverbrauch', 'CNC + Kompressor aktiv'],
+          ['14:20', 'LEG Teilnehmer beziehen Strom', '3 aktive Teilnehmer'],
+          ['14:25', 'vZEV Verteilung aktiv', 'Gewerbehalle erhält 1.8 kW']
+        ]
+      },
+      {
+        time: '17:55', stamp: '15.05.2026 · 17:55',
+        metrics: { pv: 9.1, house: 17.6, soc: 73, battery: -5.9, grid: 2.6, export: 0, self: 84, autarky: 85, dayPv: 108.5, dayLoad: 98.2 },
+        flows: { pvHouse: 9.1, pvBattery: 0, pvGrid: 0, batteryHouse: 5.9, gridHouse: 2.6, legParticipants: 1.4, vzevParticipants: 0.9 },
+        events: [
+          ['17:20', 'Wallbox erneut aktiv', 'Abendladung 11 kW'],
+          ['17:40', 'Batterie auf Entladung', 'Versorgt Spitzenlast'],
+          ['17:55', 'Hoher Netzbezug', '2.6 kW Restbezug']
+        ]
+      },
+      {
+        time: '20:10', stamp: '15.05.2026 · 20:10',
+        metrics: { pv: 0.5, house: 11.8, soc: 61, battery: -6.2, grid: 5.1, export: 0, self: 54, autarky: 57, dayPv: 110.4, dayLoad: 122.6 },
+        flows: { pvHouse: 0.5, pvBattery: 0, pvGrid: 0, batteryHouse: 6.2, gridHouse: 5.1, legParticipants: 0.7, vzevParticipants: 0.3 },
+        events: [
+          ['19:45', 'Batterie unterstützt Abendlast', 'SOC sinkt moderat'],
+          ['20:00', 'Boiler eingeschaltet', '1.4 kW Zusatzlast'],
+          ['20:10', 'Netzbezug aktiv', 'Abendverbrauch übersteigt PV']
+        ]
+      },
+      {
+        time: 'Tag', stamp: '15.05.2026 · Tagesansicht',
+        metrics: { pv: 110.4, house: 122.6, soc: 61, battery: 22.3, grid: 18.2, export: 13.8, self: 73, autarky: 85, dayPv: 110.4, dayLoad: 122.6 },
+        flows: { pvHouse: 64.1, pvBattery: 22.3, pvGrid: 13.8, batteryHouse: 28.4, gridHouse: 18.2, legParticipants: 12.1, vzevParticipants: 8.7 },
+        events: [
+          ['07:10', 'Wärmepumpe hoher Start', 'Morgenlast erkannt'],
+          ['12:05', 'PV Peak des Tages', '36.8 kW'],
+          ['18:10', 'Netzbezug abends erhöht', 'Wallbox + Gewerbelast']
+        ]
+      },
+      {
+        time: 'Monat', stamp: 'Mai 2026 · Monatsansicht',
+        metrics: { pv: 2418, house: 2186, soc: 68, battery: 684, grid: 358, export: 592, self: 76, autarky: 84, dayPv: 2418, dayLoad: 2186 },
+        flows: { pvHouse: 1452, pvBattery: 684, pvGrid: 592, batteryHouse: 511, gridHouse: 358, legParticipants: 274, vzevParticipants: 196 },
+        events: [
+          ['04.05', 'Regelenergie 6x aktiv', 'Monatliche Netzdienstleistung'],
+          ['11.05', 'LEG Verbrauchsspitze', 'Nachbarschaftsladung'],
+          ['15.05', 'Bester Eigenverbrauchstag', '73% lokal genutzt']
+        ]
+      }
+    ];
+
+    const consumerTree = [
+      ['Standort', 'Gesamtanlage mit IRIS Energy Management', 0, 'site'],
+      ['PV', '3 Strings · 36.8 kWp', 1, 'pv'],
+      ['Batterie', '208 kWh Outdoor Speicher', 1, 'battery'],
+      ['Netz', 'Bezug / Einspeisung / Regelenergie', 1, 'grid'],
+      ['Verbrauch', 'Laststruktur am Standort', 1, 'consumer'],
+      ['Heizung', 'Thermische Verbraucher', 2, 'heating'],
+      ['Wärmepumpe', 'Aktuell 3.2 kW', 3, 'heatpump'],
+      ['Boiler', 'Aktuell 1.4 kW', 3, 'boiler'],
+      ['Mobilität', 'E-Mobilität / Ladeinfrastruktur', 2, 'mobility'],
+      ['Wallbox', '11 kW Peak', 3, 'wallbox'],
+      ['Gewerbe', 'Produktionsverbraucher', 2, 'business'],
+      ['CNC Maschine', 'Aktuell 4.8 kW', 3, 'cnc'],
+      ['Kompressor', 'Aktuell 2.2 kW', 3, 'compressor'],
+      ['vZEV', 'Virtueller Zusammenschluss', 1, 'vzev'],
+      ['LEG', 'Lokale Energiegemeinschaft', 1, 'leg']
+    ];
+
+    const participants = [
+      { id:'leg-a', name:'Haus A', type:'LEG Teilnehmer', current:'2.4 kW Bezug', day:'18.2 kWh', month:'522 kWh', source:'74% PV · 16% Batterie · 10% Netz' },
+      { id:'leg-b', name:'Werkhalle Nord', type:'vZEV Teilnehmer', current:'1.8 kW Bezug', day:'32.5 kWh', month:'804 kWh', source:'48% PV · 22% Batterie · 30% Netz' },
+      { id:'leg-c', name:'Mieter Süd', type:'LEG Teilnehmer', current:'0.8 kW Bezug', day:'7.6 kWh', month:'214 kWh', source:'82% PV · 10% Batterie · 8% Netz' },
+      { id:'leg-d', name:'Ladehub Ost', type:'Lieferant / Wallbox-Cluster', current:'1.1 kW Lieferung', day:'14.8 kWh', month:'407 kWh', source:'Lokale Rückspeisung / Lastverschiebung' }
+    ];
+
+    const details = {
+      pv: { title:'PV-Anlage', subtitle:'Produktion, Stringleistung, Ertrag', kpis:[['Aktuelle Leistung','28.7 kW'],['Tagesproduktion','92.8 kWh'],['Monatsproduktion','2.418 MWh'],['Direktverbrauch','12.9 kW'],['Speicherladung','5.1 kW'],['Einspeisung','4.7 kW']] },
+      battery: { title:'Batterie', subtitle:'SOC, Lade-/Entladeleistung, Zyklen', kpis:[['SOC','88 %'],['Leistung','+5.1 kW Laden'],['Tageshub','41.6 kWh'],['Peakleistung','22 kW'],['Nutzbare Kapazität','208 kWh'],['Energieherkunft','PV / Regelenergie']] },
+      grid: { title:'Netz', subtitle:'Bezug, Einspeisung, Aufteilung', kpis:[['Netzbezug','0.0 kW'],['Netzeinspeisung','4.7 kW'],['Öffentliches Netz','2.1 kW'],['vZEV','1.4 kW'],['LEG','1.2 kW'],['Warnstatus','stabil']] },
+      consumer: { title:'Verbraucher', subtitle:'Hierarchie und Energieherkunft', kpis:[['Hausverbrauch','12.9 kW'],['Heizung','4.1 kW'],['Mobilität','1.8 kW'],['Gewerbe','7.0 kW'],['PV-Anteil','72 %'],['Batterie-Anteil','18 %']] },
+      self: { title:'Eigenverbrauch', subtitle:'Verbrauchsaufteilung nach Quelle', kpis:[['Eigenverbrauchsquote','72 %'],['Direkt durch PV','49 %'],['Über Batterie','23 %'],['Netzanteil','28 %'],['Top Verbraucher','CNC, Wärmepumpe'],['Trend','steigend']] },
+      leg: { title:'LEG Ansicht', subtitle:'Teilnehmer, lokale Quote, Energieflüsse', kpis:[['Aktive Teilnehmer','3'],['Lokale Quote','81 %'],['Aktueller LEG Fluss','3.2 kW'],['Monatsvolumen','274 kWh'],['Lieferanten','1'],['Status','stabil']] },
+      vzev: { title:'vZEV Ansicht', subtitle:'Interne Verteilung und Laststruktur', kpis:[['Aktive Teilnehmer','2'],['Aktueller Fluss','1.8 kW'],['Monatsvolumen','196 kWh'],['Dominante Last','Werkhalle Nord'],['PV-Anteil','48 %'],['Status','aktiv']] },
+      wallbox: { title:'Geräteansicht · Wallbox', subtitle:'Leistung, Laufzeit, Energieherkunft', kpis:[['Aktuelle Leistung','1.8 kW'],['Tagesverbrauch','12.4 kWh'],['Monatsverbrauch','281 kWh'],['Laufzeit','02:16 h'],['Peakleistung','11.0 kW'],['Energieherkunft','58% PV · 22% Batterie · 20% Netz']] },
+      cnc: { title:'Geräteansicht · CNC Maschine', subtitle:'Produktion und Lastspitzen', kpis:[['Aktuelle Leistung','4.8 kW'],['Tagesverbrauch','31.6 kWh'],['Monatsverbrauch','748 kWh'],['Laufzeit','05:42 h'],['Peakleistung','6.1 kW'],['Energieherkunft','61% PV · 24% Batterie · 15% Netz']] },
+      participant: { title:'Teilnehmerdetail', subtitle:'Leistung, Herkunft und Verbrauchsprofil', kpis:[['Aktuelle Leistung','2.4 kW Bezug'],['Tagesverbrauch','18.2 kWh'],['Monatsverbrauch','522 kWh'],['PV-Anteil','74 %'],['Batterie-Anteil','16 %'],['Netz-Anteil','10 %']] }
+    };
+
+    const metricsConfig = [
+      ['pv', 'PV-Produktion aktuell', 'kW', 'pv'],
+      ['house', 'Hausverbrauch aktuell', 'kW', 'load'],
+      ['soc', 'Batteriestatus (SOC)', '%', 'battery'],
+      ['battery', 'Batterie Lade-/Entladeleistung', 'kW', 'battery'],
+      ['grid', 'Netzbezug', 'kW', 'grid'],
+      ['export', 'Netzeinspeisung', 'kW', 'pv'],
+      ['self', 'Eigenverbrauchsquote', '%', 'load'],
+      ['autarky', 'Autarkiegrad', '%', 'load'],
+      ['dayPv', 'Tagesproduktion', 'kWh', 'pv'],
+      ['dayLoad', 'Tagesverbrauch', 'kWh', 'load']
+    ];
+
+    const flowDefs = [
+      { id:'pvHouse', from:[180,105], to:[490,275], tone:'pv', label:'PV → Haus', detail:'consumer' },
+      { id:'pvBattery', from:[180,105], to:[490,430], tone:'battery', label:'PV → Batterie', detail:'battery' },
+      { id:'pvGrid', from:[180,105], to:[816,275], tone:'feed', label:'PV → Netz', detail:'grid' },
+      { id:'batteryHouse', from:[490,430], to:[490,275], tone:'battery', label:'Batterie → Haus', detail:'battery' },
+      { id:'gridHouse', from:[816,275], to:[490,275], tone:'grid', label:'Netz → Haus', detail:'grid' },
+      { id:'legParticipants', from:[650,120], to:[816,430], tone:'leg', label:'LEG → Teilnehmer', detail:'leg' },
+      { id:'vzevParticipants', from:[650,430], to:[816,430], tone:'leg', label:'vZEV → Teilnehmer', detail:'vzev' }
+    ];
+
+    const nodes = [
+      { id:'pv', x:110, y:58, w:140, h:94, title:'PV', sub:'Dachfeld A/B' },
+      { id:'leg', x:575, y:72, w:150, h:94, title:'LEG', sub:'Lokale Gemeinschaft' },
+      { id:'consumer', x:405, y:228, w:170, h:104, title:'Haus / Verbrauch', sub:'Heizung · Mobilität · Gewerbe' },
+      { id:'battery', x:420, y:380, w:140, h:94, title:'Batterie', sub:'208 kWh Speicher' },
+      { id:'grid', x:760, y:228, w:116, h:104, title:'Netz', sub:'Bezug / Einspeisung' },
+      { id:'vzev', x:577, y:382, w:146, h:94, title:'vZEV', sub:'Virtueller Zusammenschluss' },
+      { id:'participant', x:760, y:382, w:140, h:94, title:'Teilnehmer', sub:'Mieter · Gewerbe' }
+    ];
+
+    let activeIndex = 3;
+    let activeRole = 'Admin';
+    const roleVisibility = {
+      'Privatkunde': ['pv','battery','grid','consumer','self','wallbox'],
+      'Mieter': ['consumer','wallbox','participant','self'],
+      'Gebäudeverwalter': ['pv','battery','grid','consumer','self','leg','participant'],
+      'LEG Betreiber': ['leg','vzev','participant','grid','consumer'],
+      'Admin': Object.keys(details)
+    };
+
+    const metricGrid = document.getElementById('metricGrid');
+    const detailTitle = document.getElementById('detailTitle');
+    const detailSubtitle = document.getElementById('detailSubtitle');
+    const detailKpis = document.getElementById('detailKpis');
+    const consumerTreeEl = document.getElementById('consumerTree');
+    const participantList = document.getElementById('participantList');
+    const flowPaths = document.getElementById('flowPaths');
+    const flowNodes = document.getElementById('flowNodes');
+    const eventList = document.getElementById('eventList');
+    const slider = document.getElementById('timeSlider');
+    const activeTimeLabel = document.getElementById('activeTimeLabel');
+    const scrubLabel = document.getElementById('scrubLabel');
+    const roleLabel = document.getElementById('roleLabel');
+    const resolutionTabs = document.getElementById('resolutionTabs');
+    const roleTabs = document.getElementById('roleTabs');
+    const quickTargets = document.getElementById('quickTargets');
+    const timelineChart = document.getElementById('timelineChart');
+
+    const resolutions = ['5 Min','10 Min','Stunde','Tag','Woche','Monat'];
+    const roles = ['Privatkunde','Mieter','Gebäudeverwalter','LEG Betreiber','Admin'];
+
+    function fmt(v, unit='') {
+      return `${v}${unit ? ' ' + unit : ''}`;
+    }
+
+    function renderMetrics() {
+      const data = views[activeIndex].metrics;
+      metricGrid.innerHTML = '';
+      metricsConfig.forEach(([key, label, unit, tone]) => {
+        const card = document.createElement('button');
+        card.className = 'metric';
+        card.dataset.tone = tone;
+        card.innerHTML = `<div class="label">${label}</div><div class="value">${data[key]} <span style="font-size:.8rem;font-weight:600;color:#9ab0c9">${unit}</span></div><div class="delta">Tippen für Detailansicht</div>`;
+        card.onclick = () => showDetail(key === 'export' ? 'grid' : key === 'house' ? 'consumer' : key);
+        metricGrid.appendChild(card);
+      });
+    }
+
+    function curve(from, to, bend = 0.18) {
+      const [x1,y1] = from, [x2,y2] = to;
+      const dx = x2 - x1, dy = y2 - y1;
+      const cx1 = x1 + dx * 0.35;
+      const cy1 = y1 + dy * bend;
+      const cx2 = x1 + dx * 0.7;
+      const cy2 = y2 - dy * bend;
+      return `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
+    }
+
+    function renderFlows() {
+      const flowData = views[activeIndex].flows;
+      flowPaths.innerHTML = '';
+      flowNodes.innerHTML = '';
+
+      flowDefs.forEach(def => {
+        const power = Math.abs(flowData[def.id] || 0);
+        if (power <= 0) return;
+        const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+        const particle = document.createElementNS('http://www.w3.org/2000/svg','path');
+        const width = Math.max(3, Math.min(16, power * (activeIndex >= 6 ? 0.08 : 0.85)));
+        const d = curve(def.from, def.to, def.id.includes('House') ? 0.08 : 0.22);
+        path.setAttribute('d', d);
+        path.setAttribute('class', `path ${def.tone} glow`);
+        path.setAttribute('stroke-width', width);
+        path.setAttribute('marker-end', `url(#arrow-${def.tone})`);
+        path.style.cursor = 'pointer';
+        path.onclick = () => showDetail(def.detail);
+
+        particle.setAttribute('d', d);
+        particle.setAttribute('class', 'particle');
+        particle.setAttribute('stroke-width', Math.max(1.5, width * 0.25));
+        particle.innerHTML = `<animate attributeName="stroke-dashoffset" from="120" to="0" dur="${Math.max(1.2, 6 / Math.max(power,1))}s" repeatCount="indefinite" />`;
+
+        const label = document.createElementNS('http://www.w3.org/2000/svg','text');
+        const mx = (def.from[0] + def.to[0]) / 2;
+        const my = (def.from[1] + def.to[1]) / 2;
+        label.setAttribute('x', mx);
+        label.setAttribute('y', my - 10);
+        label.setAttribute('fill', '#dce6f6');
+        label.setAttribute('font-size', '12');
+        label.setAttribute('text-anchor', 'middle');
+        label.textContent = `${def.label} · ${power} ${activeIndex >= 6 ? 'kWh' : 'kW'}`;
+
+        flowPaths.append(path, particle, label);
+      });
+
+      nodes.forEach(n => {
+        const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+        g.setAttribute('class','node');
+        g.onclick = () => showDetail(n.id);
+        const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        r.setAttribute('x', n.x); r.setAttribute('y', n.y); r.setAttribute('rx', 24); r.setAttribute('width', n.w); r.setAttribute('height', n.h);
+        const t1 = document.createElementNS('http://www.w3.org/2000/svg','text');
+        t1.setAttribute('x', n.x + 20); t1.setAttribute('y', n.y + 38); t1.setAttribute('class','title'); t1.textContent = n.title;
+        const t2 = document.createElementNS('http://www.w3.org/2000/svg','text');
+        t2.setAttribute('x', n.x + 20); t2.setAttribute('y', n.y + 62); t2.setAttribute('class','sub'); t2.textContent = n.sub;
+        const indicator = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        indicator.setAttribute('cx', n.x + n.w - 24); indicator.setAttribute('cy', n.y + 24); indicator.setAttribute('r', 7);
+        indicator.setAttribute('fill', n.id === 'pv' ? 'var(--pv)' : n.id === 'battery' ? 'var(--battery)' : n.id === 'grid' ? 'var(--grid)' : n.id === 'leg' || n.id === 'vzev' ? 'var(--leg)' : 'var(--load)');
+        g.append(r,t1,t2,indicator);
+        flowNodes.appendChild(g);
+      });
+    }
+
+    function renderTree() {
+      consumerTreeEl.innerHTML = '';
+      consumerTree.forEach(([title, subtitle, level, detail]) => {
+        const item = document.createElement('div');
+        item.className = `tree-item indent-${Math.min(level,3)}`;
+        item.innerHTML = `${title}<small>${subtitle}</small>`;
+        item.onclick = () => showDetail(detail in details ? detail : 'consumer');
+        consumerTreeEl.appendChild(item);
+      });
+    }
+
+    function renderParticipants() {
+      participantList.innerHTML = '';
+      participants.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'participant';
+        card.innerHTML = `<strong>${p.name}</strong><small>${p.type}</small><small>${p.current} · Tag ${p.day} · Monat ${p.month}</small><small>${p.source}</small>`;
+        card.onclick = () => showDetail('participant', p.name);
+        participantList.appendChild(card);
+      });
+    }
+
+    function showDetail(key, dynamicTitle = null) {
+      const visible = roleVisibility[activeRole] || [];
+      const safeKey = visible.includes(key) || activeRole === 'Admin' ? key : visible[0] || 'consumer';
+      const detail = details[safeKey] || details.consumer;
+      detailTitle.textContent = dynamicTitle ? `${detail.title} · ${dynamicTitle}` : detail.title;
+      detailSubtitle.textContent = detail.subtitle;
+      detailKpis.innerHTML = '';
+      detail.kpis.forEach(([k,v]) => {
+        const row = document.createElement('div');
+        row.innerHTML = `<span>${k}</span><strong>${v}</strong>`;
+        detailKpis.appendChild(row);
+      });
+    }
+
+    function renderEvents() {
+      eventList.innerHTML = '';
+      views[activeIndex].events.forEach(([time,title,desc]) => {
+        const div = document.createElement('div');
+        div.className = 'event';
+        div.innerHTML = `<div><strong>${title}</strong><span>${desc}</span></div><strong>${time}</strong>`;
+        eventList.appendChild(div);
+      });
+    }
+
+    function renderTimelineChart() {
+      const values = views.slice(0,6).map(v => v.metrics.pv);
+      const loadValues = views.slice(0,6).map(v => v.metrics.house);
+      const points = values.map((v,i)=> `${40 + i*100},${200 - v*4.3}`).join(' ');
+      const loadPoints = loadValues.map((v,i)=> `${40 + i*100},${200 - v*7.5}`).join(' ');
+      timelineChart.innerHTML = `
+        <svg viewBox="0 0 620 240" preserveAspectRatio="none">
+          <g opacity="0.14" stroke="white">
+            <line x1="0" y1="40" x2="620" y2="40"/><line x1="0" y1="90" x2="620" y2="90"/><line x1="0" y1="140" x2="620" y2="140"/><line x1="0" y1="190" x2="620" y2="190"/>
+          </g>
+          <polyline fill="none" stroke="var(--pv)" stroke-width="4" points="${points}"/>
+          <polyline fill="none" stroke="var(--load)" stroke-width="4" points="${loadPoints}"/>
+          <line x1="${40 + activeIndex*100}" x2="${40 + activeIndex*100}" y1="18" y2="220" stroke="var(--battery)" stroke-width="3" stroke-dasharray="4 6"/>
+          ${views.slice(0,6).map((v,i)=>`<text x="${30 + i*100}" y="228" fill="#8da0b8" font-size="12">${v.time}</text>`).join('')}
+          <text x="18" y="28" fill="var(--pv)" font-size="12">PV</text>
+          <text x="54" y="28" fill="var(--load)" font-size="12">Verbrauch</text>
+        </svg>`;
+    }
+
+    function renderResolutionTabs() {
+      resolutionTabs.innerHTML = '';
+      resolutions.forEach((r,i) => {
+        const b = document.createElement('button');
+        b.textContent = r;
+        if (i === 0) b.classList.add('active');
+        resolutionTabs.appendChild(b);
+      });
+      roleTabs.innerHTML = '';
+      roles.forEach(role => {
+        const b = document.createElement('button');
+        b.textContent = role;
+        if (role === activeRole) b.classList.add('active');
+        b.onclick = () => { activeRole = role; roleLabel.textContent = `Rolle: ${role}`; renderResolutionTabs(); showDetail('consumer'); };
+        roleTabs.appendChild(b);
+      });
+      quickTargets.innerHTML = '';
+      ['PV','Batterie','Netz','LEG','Geräte'].forEach((name) => {
+        const b = document.createElement('button');
+        b.textContent = name;
+        b.onclick = () => showDetail(name === 'PV' ? 'pv' : name === 'Batterie' ? 'battery' : name === 'Netz' ? 'grid' : name === 'LEG' ? 'leg' : 'wallbox');
+        quickTargets.appendChild(b);
+      });
+    }
+
+    function syncView() {
+      const view = views[activeIndex];
+      activeTimeLabel.textContent = view.stamp;
+      scrubLabel.textContent = `Zeitpunkt: ${view.time}`;
+      const m = view.metrics;
+      windowSummary.textContent = activeIndex >= 6
+        ? `Fenster Mai · PV ${m.dayPv} kWh · Eigenverbrauch ${m.self}% · Netzbezug ${m.grid} kWh`
+        : `Fenster 12:00–18:00 · PV ${m.dayPv} kWh · Eigenverbrauch ${m.self}% · Netzbezug ${m.grid} kW`;
+      renderMetrics();
+      renderFlows();
+      renderEvents();
+      renderTimelineChart();
+      showDetail('consumer');
+    }
+
+    slider.addEventListener('input', (e) => {
+      activeIndex = Number(e.target.value);
+      syncView();
+    });
+
+    renderTree();
+    renderParticipants();
+    renderResolutionTabs();
+    syncView();
+  </script>
+</body>
+</html>
