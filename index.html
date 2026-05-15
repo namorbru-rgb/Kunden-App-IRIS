@@ -213,11 +213,11 @@
           <p>PV, Batterie, Netz, LEG und vZEV in einer hochwertigen mobilen Energieoberfläche – visuell, intuitiv und zeitbasiert navigierbar.</p>
         </div>
         <div class="hero-aside">
-          <div class="glass">
-            <div class="hero-kpi"><div><small>Aktueller Zeitpunkt</small><strong id="activeTimeLabel">15.05.2026 · 14:25</strong></div></div>
+          <div class="glass" onclick="showDetail('changelog')" style="cursor:pointer;">
+            <div class="hero-kpi"><div><small>Versionsverlauf</small><strong id="heroVersion">v0.3.2</strong></div><div><small>15.05.2026</small><strong>Neu</strong></div></div>
           </div>
           <div class="glass">
-            <div class="hero-kpi"><div><small>Eigenverbrauch</small><strong id="heroSelf">72 %</strong></div><div><small>Autarkie</small><strong id="heroAutarky">100 %</strong></div></div>
+            <div class="hero-kpi"><div><small>Aktueller Zeitpunkt</small><strong id="activeTimeLabel">15.05.2026 · 14:25</strong></div></div>
           </div>
           <div class="glass">
             <div class="hero-kpi"><div><small>Ansicht</small><strong id="heroMode">Live Energiefluss</strong></div><div><small>Rolle</small><strong id="roleLabel">Admin</strong></div></div>
@@ -363,7 +363,8 @@
       vzev:{ title:'vZEV Ansicht', subtitle:'Interne Verteilung und Laststruktur', kpis:[['Aktive Teilnehmer','2'],['Aktueller Fluss','1.8 kW'],['Monatsvolumen','196 kWh'],['Dominante Last','Werkhalle Nord'],['PV-Anteil','48 %'],['Status','aktiv']] },
       wallbox:{ title:'Geräteansicht · Wallbox', subtitle:'Leistung, Laufzeit, Energieherkunft', kpis:[['Aktuelle Leistung','1.8 kW'],['Tagesverbrauch','12.4 kWh'],['Monatsverbrauch','281 kWh'],['Laufzeit','02:16 h'],['Peakleistung','11.0 kW'],['Energieherkunft','58% PV · 22% Batterie · 20% Netz']] },
       cnc:{ title:'Geräteansicht · CNC Maschine', subtitle:'Produktion und Lastspitzen', kpis:[['Aktuelle Leistung','4.8 kW'],['Tagesverbrauch','31.6 kWh'],['Monatsverbrauch','748 kWh'],['Laufzeit','05:42 h'],['Peakleistung','6.1 kW'],['Energieherkunft','61% PV · 24% Batterie · 15% Netz']] },
-      participant:{ title:'Teilnehmerdetail', subtitle:'Leistung, Herkunft und Verbrauchsprofil', kpis:[['Aktuelle Leistung','2.4 kW Bezug'],['Tagesverbrauch','18.2 kWh'],['Monatsverbrauch','522 kWh'],['PV-Anteil','74 %'],['Batterie-Anteil','16 %'],['Netz-Anteil','10 %']] }
+      participant:{ title:'Teilnehmerdetail', subtitle:'Leistung, Herkunft und Verbrauchsprofil', kpis:[['Aktuelle Leistung','2.4 kW Bezug'],['Tagesverbrauch','18.2 kWh'],['Monatsverbrauch','522 kWh'],['PV-Anteil','74 %'],['Batterie-Anteil','16 %'],['Netz-Anteil','10 %']] },
+      changelog:{ title:'Versionsverlauf', subtitle:'Letzte sichtbare Änderungen der Kunden-App IRIS', kpis:[['v0.3.2','Energiefluss stärker zentriert, weniger KPI-Lärm'],['v0.3.1','Mobile App-Look näher an Foto-Vorlagen'],['v0.2.0','Interaktive Detailansichten für PV, Batterie, Netz, LEG'],['v0.1.0','Erster klickbarer UI-Prototyp'],['Nächster Schritt','weitere Reduktion der Texte im Startscreen'],['Status','UI-Prototyp ohne Backend']] }
     };
 
     const metricConfig = [
