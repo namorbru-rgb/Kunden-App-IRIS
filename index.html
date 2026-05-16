@@ -52,15 +52,7 @@
       border:1px solid var(--line); position:relative; overflow:hidden;
       padding: 8px 0;
     }
-    .side-stack { display:none; gap: 16px; padding: 10px; z-index:2; }
-    .source {
-      background: linear-gradient(180deg, #ffffff, #f7faff); border:1px solid var(--line); border-radius: 24px;
-      padding: 14px; text-align:center; cursor:pointer;
-    }
-    .source .label { color:var(--muted); font-size:.78rem; margin-bottom: 8px; }
-    .source .value { font-size:1.55rem; font-weight:700; }
-    .source .sub { margin-top:5px; font-size:.76rem; color:var(--muted); }
-    .center-stage { position:relative; height:100%; display:grid; place-items:center; }
+    .center-stage { position:relative; height:100%; min-height: 360px; display:grid; place-items:center; }
     .home-core {
       width: 172px; height: 172px; border-radius: 50%; background:
       radial-gradient(circle at 30% 30%, rgba(79,209,142,.2), rgba(79,209,142,.06) 35%, rgba(255,255,255,.96) 70%), #fff;
@@ -95,7 +87,6 @@
     .orbit-battery { bottom: 86px; left: 158px; }
     .orbit-soc { bottom: 86px; right: 158px; }
     .orbit-grid { top: 50%; right: 118px; transform: translateY(-50%); }
-    .strip { display:none; }
     .side { display:grid; gap:14px; }
     .list { display:grid; gap:10px; }
     .row {
@@ -103,9 +94,10 @@
     }
     .row strong { display:block; font-size:.94rem; }
     .row small { display:block; color:var(--muted); margin-top:4px; }
-    .seg { display:flex; flex-wrap:wrap; gap:8px; }
+    .seg { display:flex; flex-wrap:nowrap; gap:8px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding-bottom:2px; }
+    .seg::-webkit-scrollbar { display:none; }
     .seg button, .bottom-nav button {
-      border:0; cursor:pointer; border-radius:999px; padding:10px 14px; background:#eef3fb; color:#6f8099; font-weight:600;
+      border:0; cursor:pointer; border-radius:999px; padding:10px 14px; background:#eef3fb; color:#6f8099; font-weight:600; white-space:nowrap; flex:none;
     }
     .seg button.active, .bottom-nav button.active { background:#172748; color:#fff; }
     .timeline { padding:14px; }
@@ -116,25 +108,31 @@
     .bottom-nav { position: sticky; bottom: 10px; display:flex; justify-content:center; margin-top: 14px; }
     .bottom-nav .bar {
       display:flex; gap:6px; padding: 8px; border-radius: 999px; background: rgba(255,255,255,.92); border:1px solid var(--line); box-shadow: var(--shadow);
+      max-width: calc(100vw - 28px); overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch;
     }
+    .bottom-nav .bar::-webkit-scrollbar { display:none; }
     @media (max-width: 980px) {
       .layout { grid-template-columns: 1fr; }
-      .hero-main { grid-template-columns: 1fr; min-height: 500px; padding: 10px 0; }
-      .side-stack { grid-template-columns: 1fr 1fr; }
-      .center-stage { order: -1; min-height: 280px; }
+      .hero-main { min-height: 400px; padding: 10px 0; }
+      .center-stage { min-height: 360px; }
     }
     @media (max-width: 620px) {
-      .top { flex-direction:column; }
-      .top-right { width:100%; justify-content:space-between; }
-      .home-core { width: 148px; height: 148px; }
-      .home-core .value { font-size: 1.85rem; }
-      .side-stack { grid-template-columns: 1fr; }
+      .top { flex-wrap:wrap; align-items:center; }
+      .top-right { width:auto; }
+      .hero { padding: 6px; }
+      .hero-main { padding: 4px 0; }
+      .center-stage { min-height: 340px; }
+      .home-core { width: 138px; height: 138px; padding: 10px; }
+      .home-core .value { font-size: 1.7rem; }
+      .home-core .label, .home-core .sub { font-size: .7rem; }
       .floating-chip { display:none; }
-      .orbit-metric { min-width: 84px; padding: 6px 8px; }
-      .orbit-pv { top: 28px; }
-      .orbit-grid { right: 12px; }
-      .orbit-battery { left: 12px; bottom: 28px; }
-      .orbit-soc { right: 12px; bottom: 28px; }
+      .orbit-metric { min-width: 78px; padding: 6px 8px; }
+      .orbit-metric .label { font-size: .62rem; }
+      .orbit-metric .value { font-size: .82rem; }
+      .orbit-pv { top: 14px; }
+      .orbit-grid { right: 14px; top: 50%; transform: translateY(-50%); }
+      .orbit-battery { left: 14px; bottom: 14px; }
+      .orbit-soc { right: 14px; bottom: 14px; }
     }
   </style>
 </head>
@@ -146,24 +144,16 @@
         <h1>Energiefluss</h1>
       </div>
       <div class="top-right">
-        <div class="ghost" id="versionPill">Versionen · v8</div>
+        <div class="ghost" id="versionPill">Versionen · v9</div>
       </div>
     </div>
 
     <div class="layout">
       <div>
         <section class="card hero">
-          <div class="hero-head" style="justify-content:flex-end; min-height:0; margin-bottom:0;">
-            <span id="smallDate" style="display:none"></span>
-          </div>
           <div class="hero-main">
-            <div class="side-stack">
-              <div class="source" onclick="showDetail('pv')"><div class="label">PV</div><div class="value" id="pvValue">28.7 kW</div><div class="sub" style="display:none">Erzeugung</div></div>
-              <div class="source" onclick="showDetail('battery')"><div class="label">Batterie</div><div class="value" id="batteryValue">+5.1 kW</div><div class="sub" style="display:none">lädt</div></div>
-            </div>
-
             <div class="center-stage">
-              <svg class="flow" viewBox="0 0 600 560" aria-label="Energiefluss">
+              <svg class="flow" viewBox="0 0 600 560" preserveAspectRatio="none" aria-label="Energiefluss">
                 <defs>
                   <marker id="arrow-pv" markerWidth="14" markerHeight="14" refX="10" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--pv)"/></marker>
                   <marker id="arrow-battery" markerWidth="14" markerHeight="14" refX="10" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--battery)"/></marker>
@@ -186,13 +176,7 @@
               <div class="orbit-metric orbit-soc" onclick="showDetail('battery')"><div class="label">SOC</div><div class="value" id="socValue">88 %</div></div>
               <div class="orbit-metric orbit-grid" onclick="showDetail('grid')"><div class="label">Netz aktuell</div><div class="value" id="gridTodayValue">4.7 kW</div></div>
             </div>
-
-            <div class="side-stack">
-              <div class="source" onclick="showDetail('grid')"><div class="label">Netz</div><div class="value" id="gridValue">4.7 kW</div><div class="sub" style="display:none">Einspeisung</div></div>
-              <div class="source" onclick="showDetail('leg')"><div class="label">LEG</div><div class="value" id="legValue">3.2 kW</div><div class="sub" style="display:none">sekundär</div></div>
-            </div>
           </div>
-          <div class="strip"></div>
         </section>
 
         <section class="card timeline">
@@ -238,7 +222,7 @@
       battery: [['SOC','88 %'],['Leistung','+5.1 kW'],['Modus','lädt'],['Tageshub','41.6 kWh'],['Peak','22 kW'],['Quelle','PV']],
       grid: [['Netzbezug','0.0 kW'],['Einspeisung','4.7 kW'],['Öffentliches Netz','2.1 kW'],['vZEV','1.4 kW'],['LEG','1.2 kW'],['Status','ruhig']],
       leg: [['LEG Fluss','3.2 kW'],['Aktive Teilnehmer','3'],['Lokale Quote','81 %'],['Monatsvolumen','274 kWh'],['Top Teilnehmer','Haus A'],['Sichtbarkeit','sekundär']],
-      versions: [['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
+      versions: [['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
     };
 
     const participants = [
@@ -248,25 +232,62 @@
     let active = 3;
     let detail = 'consumer';
 
-    function flowPath(a,b,c,d) { return `M ${a} ${b} C ${a+80} ${b}, ${c-80} ${d}, ${c} ${d}`; }
-
     function renderFlow() {
       const v = views[active];
+      const stage = document.querySelector('.center-stage');
+      const svg = document.querySelector('svg.flow');
+      const core = document.querySelector('.home-core');
       const layer = document.getElementById('flowLayer');
+      const W = stage.clientWidth, H = stage.clientHeight;
+      if (!W || !H) { requestAnimationFrame(renderFlow); return; }
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      const stageBox = stage.getBoundingClientRect();
+      const coreBox = core.getBoundingClientRect();
+      const cx = coreBox.left + coreBox.width/2 - stageBox.left;
+      const cy = coreBox.top + coreBox.height/2 - stageBox.top;
+      const coreR = coreBox.width/2;
+
+      function pathFromOrbit(sel) {
+        const o = document.querySelector(sel);
+        if (!o) return null;
+        const ob = o.getBoundingClientRect();
+        if (!ob.width) return null;
+        const ox = ob.left + ob.width/2 - stageBox.left;
+        const oy = ob.top + ob.height/2 - stageBox.top;
+        const dx = cx - ox, dy = cy - oy;
+        const dist = Math.hypot(dx, dy) || 1;
+        const ux = dx/dist, uy = dy/dist;
+        const orbitR = Math.max(ob.width, ob.height)/2 + 6;
+        const sx = ox + ux * orbitR;
+        const sy = oy + uy * orbitR;
+        const ex = cx - ux * (coreR + 8);
+        const ey = cy - uy * (coreR + 8);
+        const bend = Math.min(28, dist * 0.18);
+        const mx = (sx+ex)/2 + uy * bend;
+        const my = (sy+ey)/2 - ux * bend;
+        return `M ${sx.toFixed(1)} ${sy.toFixed(1)} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+      }
+
       const pvToHouse = Math.min(v.pv, v.house);
       const battToHouse = v.battery < 0 ? Math.abs(v.battery) : 0;
       const pvToBattery = v.battery > 0 ? v.battery : 0;
       const gridToHouse = v.grid;
       const exportFlow = v.export;
-      const lines = [
-        {d: flowPath(120,130,250,280), cls:'pv', w: Math.max(4, Math.min(16, pvToHouse*0.9)), arrow:'pv', value:`PV → Haus ${pvToHouse} ${active>=6?'kWh':'kW'}`},
-        {d: flowPath(120,150,260,380), cls:'battery', w: Math.max(3, Math.min(14, Math.max(pvToBattery,battToHouse)*0.9)), arrow:'battery', value: v.battery > 0 ? `PV → Batterie ${pvToBattery} ${active>=6?'kWh':'kW'}` : `Batterie → Haus ${battToHouse} ${active>=6?'kWh':'kW'}`},
-        {d: flowPath(480,280,560,280), cls:gridToHouse>0?'grid':'feed', w: Math.max(3, Math.min(14, Math.max(gridToHouse, exportFlow)*0.9)), arrow:gridToHouse>0?'grid':'feed', value: gridToHouse>0 ? `Netz → Haus ${gridToHouse} ${active>=6?'kWh':'kW'}` : `Einspeisung ${exportFlow} ${active>=6?'kWh':'kW'}`}
+
+      const specs = [
+        { sel:'.orbit-pv',      cls:'pv',      arrow:'pv',      mag: pvToHouse },
+        { sel:'.orbit-battery', cls:'battery', arrow:'battery', mag: Math.max(pvToBattery, battToHouse) },
+        { sel:'.orbit-grid',    cls: gridToHouse>0?'grid':'feed', arrow: gridToHouse>0?'grid':'feed', mag: Math.max(gridToHouse, exportFlow) }
       ];
-      layer.innerHTML = lines.map((l,i)=>`
+      const lines = specs
+        .map(s => ({ ...s, d: pathFromOrbit(s.sel), w: Math.max(3, Math.min(14, s.mag*0.9)) }))
+        .filter(s => s.d && s.mag > 0);
+
+      layer.innerHTML = lines.map(l => `
         <path class="path ${l.cls}" d="${l.d}" stroke-width="${l.w}" marker-end="url(#arrow-${l.arrow})"></path>
         <path class="particle" d="${l.d}" stroke-width="${Math.max(1.5,l.w*.22)}"><animate attributeName="stroke-dashoffset" from="120" to="0" dur="${Math.max(1.2,6/Math.max(l.w,1))}s" repeatCount="indefinite" /></path>
       `).join('');
+
       document.getElementById('chipPvHouse').textContent = `PV → Haus ${pvToHouse} ${active>=6?'kWh':'kW'}`;
       document.getElementById('chipBatteryHouse').textContent = v.battery > 0 ? `PV → Batterie ${pvToBattery} ${active>=6?'kWh':'kW'}` : `Batterie → Haus ${battToHouse} ${active>=6?'kWh':'kW'}`;
       document.getElementById('chipGrid').textContent = gridToHouse > 0 ? `Netz → Haus ${gridToHouse} ${active>=6?'kWh':'kW'}` : `Einspeisung ${exportFlow} ${active>=6?'kWh':'kW'}`;
@@ -275,10 +296,6 @@
 
     function renderMain() {
       const v = views[active];
-      document.getElementById('pvValue').textContent = `${v.pv} ${active>=6?'kWh':'kW'}`;
-      document.getElementById('batteryValue').textContent = `${v.battery>0?'+':''}${v.battery} ${active>=6?'kWh':'kW'}`;
-      document.getElementById('gridValue').textContent = `${(v.grid>0?v.grid:v.export)} ${active>=6?'kWh':'kW'}`;
-      document.getElementById('legValue').textContent = `${v.leg} ${active>=6?'kWh':'kW'}`;
       document.getElementById('houseValue').textContent = v.house;
       document.getElementById('dayPv').textContent = `${v.pv} ${active>=6?'kWh':'kW'}`;
       document.getElementById('batteryOrbitValue').textContent = `${v.battery>0?'+':''}${v.battery} ${active>=6?'kWh':'kW'}`;
@@ -316,12 +333,14 @@
     }
 
     document.getElementById('versionPill').onclick = ()=>showDetail('versions');
-      document.getElementById('timeSlider').addEventListener('input', e => { active = Number(e.target.value); renderMain(); renderTimeline(); });
+    document.getElementById('timeSlider').addEventListener('input', e => { active = Number(e.target.value); renderMain(); renderTimeline(); });
+    window.addEventListener('resize', () => requestAnimationFrame(renderFlow));
 
     renderParticipants();
     renderMain();
     renderTimeline();
     showDetail('consumer');
+    requestAnimationFrame(renderFlow);
   </script>
 </body>
 </html>
