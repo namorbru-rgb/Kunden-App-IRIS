@@ -61,14 +61,14 @@
     .source .sub { margin-top:5px; font-size:.76rem; color:var(--muted); }
     .center-stage { position:relative; height:100%; display:grid; place-items:center; }
     .home-core {
-      width: 260px; height: 260px; border-radius: 50%; background:
+      width: 210px; height: 210px; border-radius: 50%; background:
       radial-gradient(circle at 30% 30%, rgba(79,209,142,.2), rgba(79,209,142,.06) 35%, rgba(255,255,255,.96) 70%), #fff;
-      border: 1px solid rgba(79,209,142,.2); box-shadow: 0 22px 55px rgba(79,209,142,.18), inset 0 0 0 18px rgba(79,209,142,.05);
-      display:grid; place-items:center; text-align:center; padding: 24px; z-index:3;
+      border: 1px solid rgba(79,209,142,.2); box-shadow: 0 18px 42px rgba(79,209,142,.16), inset 0 0 0 14px rgba(79,209,142,.05);
+      display:grid; place-items:center; text-align:center; padding: 18px; z-index:3;
     }
-    .home-core .label { color:var(--muted); font-size:.82rem; }
-    .home-core .value { font-size: 3.2rem; font-weight:800; line-height:1; margin: 8px 0; }
-    .home-core .sub { font-size:.85rem; color:#4f6381; }
+    .home-core .label { color:var(--muted); font-size:.78rem; }
+    .home-core .value { font-size: 2.8rem; font-weight:800; line-height:1; margin: 6px 0; }
+    .home-core .sub { font-size:.8rem; color:#4f6381; }
     svg.flow { position:absolute; inset:0; width:100%; height:100%; }
     .path { fill:none; stroke-linecap:round; opacity:.98; }
     .path.pv { stroke: var(--pv); }
@@ -90,10 +90,10 @@
     }
     .orbit-metric .label { color:var(--muted); font-size:.72rem; margin-bottom:4px; }
     .orbit-metric .value { font-size:1rem; font-weight:800; }
-    .orbit-pv { top: 92px; left: 50%; transform: translateX(-50%); }
-    .orbit-battery { bottom: 96px; left: 118px; }
-    .orbit-soc { bottom: 96px; right: 118px; }
-    .orbit-grid { top: 50%; right: 72px; transform: translateY(-50%); }
+    .orbit-pv { top: 118px; left: 50%; transform: translateX(-50%); }
+    .orbit-battery { bottom: 116px; left: 126px; }
+    .orbit-soc { bottom: 116px; right: 126px; }
+    .orbit-grid { top: 50%; right: 78px; transform: translateY(-50%); }
     .strip { display:none; }
     .side { display:grid; gap:14px; }
     .list { display:grid; gap:10px; }
@@ -125,8 +125,8 @@
     @media (max-width: 620px) {
       .top { flex-direction:column; }
       .top-right { width:100%; justify-content:space-between; }
-      .home-core { width: 220px; height: 220px; }
-      .home-core .value { font-size: 2.5rem; }
+      .home-core { width: 188px; height: 188px; }
+      .home-core .value { font-size: 2.25rem; }
       .side-stack { grid-template-columns: 1fr; }
       .floating-chip { display:none; }
       .orbit-pv { top: 36px; }
@@ -179,10 +179,10 @@
               <div class="floating-chip chip-2" id="chipBatteryHouse">PV → Batterie 5.1 kW</div>
               <div class="floating-chip chip-3" id="chipGrid">Netz / Einspeisung 4.7 kW</div>
               <div class="floating-chip chip-4" id="chipStatus">lokal versorgt</div>
-              <div class="orbit-metric orbit-pv" onclick="showDetail('pv')"><div class="label">PV heute</div><div class="value" id="dayPv">92.8 kWh</div></div>
-              <div class="orbit-metric orbit-battery" onclick="showDetail('consumer')"><div class="label">Haus heute</div><div class="value" id="dayLoad">74.5 kWh</div></div>
+              <div class="orbit-metric orbit-pv" onclick="showDetail('pv')"><div class="label">PV aktuell</div><div class="value" id="dayPv">28.7 kW</div></div>
+              <div class="orbit-metric orbit-battery" onclick="showDetail('consumer')"><div class="label">Verbrauch aktuell</div><div class="value" id="dayLoad">12.9 kW</div></div>
               <div class="orbit-metric orbit-soc" onclick="showDetail('battery')"><div class="label">SOC</div><div class="value" id="socValue">88 %</div></div>
-              <div class="orbit-metric orbit-grid" onclick="showDetail('grid')"><div class="label">Netz heute</div><div class="value" id="gridTodayValue">18.2 kWh</div></div>
+              <div class="orbit-metric orbit-grid" onclick="showDetail('grid')"><div class="label">Netz aktuell</div><div class="value" id="gridTodayValue">4.7 kW</div></div>
             </div>
 
             <div class="side-stack">
@@ -236,7 +236,7 @@
       battery: [['SOC','88 %'],['Leistung','+5.1 kW'],['Modus','lädt'],['Tageshub','41.6 kWh'],['Peak','22 kW'],['Quelle','PV']],
       grid: [['Netzbezug','0.0 kW'],['Einspeisung','4.7 kW'],['Öffentliches Netz','2.1 kW'],['vZEV','1.4 kW'],['LEG','1.2 kW'],['Status','ruhig']],
       leg: [['LEG Fluss','3.2 kW'],['Aktive Teilnehmer','3'],['Lokale Quote','81 %'],['Monatsvolumen','274 kWh'],['Top Teilnehmer','Haus A'],['Sichtbarkeit','sekundär']],
-      versions: [['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
+      versions: [['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
     };
 
     const participants = [
@@ -278,10 +278,10 @@
       document.getElementById('gridValue').textContent = `${(v.grid>0?v.grid:v.export)} ${active>=6?'kWh':'kW'}`;
       document.getElementById('legValue').textContent = `${v.leg} ${active>=6?'kWh':'kW'}`;
       document.getElementById('houseValue').textContent = v.house;
-      document.getElementById('dayPv').textContent = `${v.dayPv} kWh`;
-      document.getElementById('dayLoad').textContent = `${v.dayLoad} kWh`;
+      document.getElementById('dayPv').textContent = `${v.pv} ${active>=6?'kWh':'kW'}`;
+      document.getElementById('dayLoad').textContent = `${v.house} ${active>=6?'kWh':'kW'}`;
       document.getElementById('socValue').textContent = `${v.soc} %`;
-      document.getElementById('gridTodayValue').textContent = `${v.grid} ${active>=6?'kWh':'kW'}`;
+      document.getElementById('gridTodayValue').textContent = `${(v.grid>0?v.grid:v.export)} ${active>=6?'kWh':'kW'}`;
       document.getElementById('timeLabel').textContent = v.time;
       renderFlow();
     }
