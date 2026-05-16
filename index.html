@@ -61,14 +61,14 @@
     .source .sub { margin-top:5px; font-size:.76rem; color:var(--muted); }
     .center-stage { position:relative; height:100%; display:grid; place-items:center; }
     .home-core {
-      width: 210px; height: 210px; border-radius: 50%; background:
+      width: 172px; height: 172px; border-radius: 50%; background:
       radial-gradient(circle at 30% 30%, rgba(79,209,142,.2), rgba(79,209,142,.06) 35%, rgba(255,255,255,.96) 70%), #fff;
-      border: 1px solid rgba(79,209,142,.2); box-shadow: 0 18px 42px rgba(79,209,142,.16), inset 0 0 0 14px rgba(79,209,142,.05);
-      display:grid; place-items:center; text-align:center; padding: 18px; z-index:3;
+      border: 1px solid rgba(79,209,142,.2); box-shadow: 0 14px 32px rgba(79,209,142,.15), inset 0 0 0 11px rgba(79,209,142,.05);
+      display:grid; place-items:center; text-align:center; padding: 14px; z-index:3;
     }
-    .home-core .label { color:var(--muted); font-size:.78rem; }
-    .home-core .value { font-size: 2.8rem; font-weight:800; line-height:1; margin: 6px 0; }
-    .home-core .sub { font-size:.8rem; color:#4f6381; }
+    .home-core .label { color:var(--muted); font-size:.74rem; }
+    .home-core .value { font-size: 2.35rem; font-weight:800; line-height:1; margin: 4px 0; }
+    .home-core .sub { font-size:.76rem; color:#4f6381; }
     svg.flow { position:absolute; inset:0; width:100%; height:100%; }
     .path { fill:none; stroke-linecap:round; opacity:.98; }
     .path.pv { stroke: var(--pv); }
@@ -125,8 +125,8 @@
     @media (max-width: 620px) {
       .top { flex-direction:column; }
       .top-right { width:100%; justify-content:space-between; }
-      .home-core { width: 188px; height: 188px; }
-      .home-core .value { font-size: 2.25rem; }
+      .home-core { width: 156px; height: 156px; }
+      .home-core .value { font-size: 1.95rem; }
       .side-stack { grid-template-columns: 1fr; }
       .floating-chip { display:none; }
       .orbit-pv { top: 36px; }
@@ -144,7 +144,7 @@
         <h1>Energiefluss</h1>
       </div>
       <div class="top-right">
-        <div class="ghost" id="versionPill">Versionen · v5</div>
+        <div class="ghost" id="versionPill">Versionen · v6</div>
       </div>
     </div>
 
@@ -236,7 +236,7 @@
       battery: [['SOC','88 %'],['Leistung','+5.1 kW'],['Modus','lädt'],['Tageshub','41.6 kWh'],['Peak','22 kW'],['Quelle','PV']],
       grid: [['Netzbezug','0.0 kW'],['Einspeisung','4.7 kW'],['Öffentliches Netz','2.1 kW'],['vZEV','1.4 kW'],['LEG','1.2 kW'],['Status','ruhig']],
       leg: [['LEG Fluss','3.2 kW'],['Aktive Teilnehmer','3'],['Lokale Quote','81 %'],['Monatsvolumen','274 kWh'],['Top Teilnehmer','Haus A'],['Sichtbarkeit','sekundär']],
-      versions: [['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
+      versions: [['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
     };
 
     const participants = [
