@@ -68,7 +68,7 @@
     .path.battery { stroke: var(--battery); }
     .path.grid { stroke: var(--grid); }
     .path.feed { stroke: var(--feed); }
-    .particle { fill:none; stroke:#fff; stroke-width:2; stroke-dasharray:2 12; stroke-linecap:round; }
+    .particle { fill:none; stroke:rgba(255,255,255,.85); stroke-dasharray:2 10; stroke-linecap:round; }
     .floating-chip {
       position:absolute; background: rgba(255,255,255,.92); border:1px solid var(--line); border-radius: 999px; padding: 8px 12px; font-size:.8rem; color:#556983; z-index:3;
     }
@@ -144,7 +144,7 @@
         <h1>Energiefluss</h1>
       </div>
       <div class="top-right">
-        <div class="ghost" id="versionPill">Versionen · v9</div>
+        <div class="ghost" id="versionPill">Versionen · v10</div>
       </div>
     </div>
 
@@ -153,12 +153,12 @@
         <section class="card hero">
           <div class="hero-main">
             <div class="center-stage">
-              <svg class="flow" viewBox="0 0 600 560" preserveAspectRatio="none" aria-label="Energiefluss">
+              <svg class="flow" viewBox="0 0 600 560" aria-label="Energiefluss">
                 <defs>
-                  <marker id="arrow-pv" markerWidth="14" markerHeight="14" refX="10" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--pv)"/></marker>
-                  <marker id="arrow-battery" markerWidth="14" markerHeight="14" refX="10" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--battery)"/></marker>
-                  <marker id="arrow-grid" markerWidth="14" markerHeight="14" refX="10" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--grid)"/></marker>
-                  <marker id="arrow-feed" markerWidth="14" markerHeight="14" refX="10" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--feed)"/></marker>
+                  <marker id="arrow-pv" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="var(--pv)"/></marker>
+                  <marker id="arrow-battery" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="var(--battery)"/></marker>
+                  <marker id="arrow-grid" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="var(--grid)"/></marker>
+                  <marker id="arrow-feed" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="var(--feed)"/></marker>
                 </defs>
                 <g id="flowLayer"></g>
               </svg>
@@ -222,7 +222,7 @@
       battery: [['SOC','88 %'],['Leistung','+5.1 kW'],['Modus','lädt'],['Tageshub','41.6 kWh'],['Peak','22 kW'],['Quelle','PV']],
       grid: [['Netzbezug','0.0 kW'],['Einspeisung','4.7 kW'],['Öffentliches Netz','2.1 kW'],['vZEV','1.4 kW'],['LEG','1.2 kW'],['Status','ruhig']],
       leg: [['LEG Fluss','3.2 kW'],['Aktive Teilnehmer','3'],['Lokale Quote','81 %'],['Monatsvolumen','274 kWh'],['Top Teilnehmer','Haus A'],['Sichtbarkeit','sekundär']],
-      versions: [['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
+      versions: [['v10','Pfeilspitzen entglubt: feste Pixelgröße statt strokeWidth-Skalierung, Pfade enden bündig am Kreis, schlankere Linien'],['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
     };
 
     const participants = [
@@ -257,12 +257,14 @@
         const dx = cx - ox, dy = cy - oy;
         const dist = Math.hypot(dx, dy) || 1;
         const ux = dx/dist, uy = dy/dist;
-        const orbitR = Math.max(ob.width, ob.height)/2 + 6;
-        const sx = ox + ux * orbitR;
-        const sy = oy + uy * orbitR;
-        const ex = cx - ux * (coreR + 8);
-        const ey = cy - uy * (coreR + 8);
-        const bend = Math.min(28, dist * 0.18);
+        const hx = ob.width/2 + 4, hy = ob.height/2 + 4;
+        const tEdge = Math.min(Math.abs(ux) > 1e-3 ? hx/Math.abs(ux) : Infinity,
+                               Math.abs(uy) > 1e-3 ? hy/Math.abs(uy) : Infinity);
+        const sx = ox + ux * tEdge;
+        const sy = oy + uy * tEdge;
+        const ex = cx - ux * (coreR + 6);
+        const ey = cy - uy * (coreR + 6);
+        const bend = Math.min(22, dist * 0.14);
         const mx = (sx+ex)/2 + uy * bend;
         const my = (sy+ey)/2 - ux * bend;
         return `M ${sx.toFixed(1)} ${sy.toFixed(1)} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
@@ -280,7 +282,7 @@
         { sel:'.orbit-grid',    cls: gridToHouse>0?'grid':'feed', arrow: gridToHouse>0?'grid':'feed', mag: Math.max(gridToHouse, exportFlow) }
       ];
       const lines = specs
-        .map(s => ({ ...s, d: pathFromOrbit(s.sel), w: Math.max(3, Math.min(14, s.mag*0.9)) }))
+        .map(s => ({ ...s, d: pathFromOrbit(s.sel), w: Math.max(2.5, Math.min(6, 2.5 + Math.log2(1 + s.mag) * 0.9)) }))
         .filter(s => s.d && s.mag > 0);
 
       layer.innerHTML = lines.map(l => `
