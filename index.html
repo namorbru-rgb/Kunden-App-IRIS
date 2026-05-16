@@ -144,8 +144,7 @@
         <h1>Energiefluss</h1>
       </div>
       <div class="top-right">
-        <div class="ghost" id="versionPill" style="display:none">v0.4.2</div>
-        <div class="ghost" id="timePill">14:25</div>
+        <div class="ghost" id="versionPill">Versionen · v4</div>
       </div>
     </div>
 
@@ -237,7 +236,7 @@
       battery: [['SOC','88 %'],['Leistung','+5.1 kW'],['Modus','lädt'],['Tageshub','41.6 kWh'],['Peak','22 kW'],['Quelle','PV']],
       grid: [['Netzbezug','0.0 kW'],['Einspeisung','4.7 kW'],['Öffentliches Netz','2.1 kW'],['vZEV','1.4 kW'],['LEG','1.2 kW'],['Status','ruhig']],
       leg: [['LEG Fluss','3.2 kW'],['Aktive Teilnehmer','3'],['Lokale Quote','81 %'],['Monatsvolumen','274 kWh'],['Top Teilnehmer','Haus A'],['Sichtbarkeit','sekundär']],
-      versions: [['v0.4.2','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v0.4.1','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v0.4.0','Hauptscreen radikal vereinfacht'],['v0.3.2','Fluss stärker zentriert'],['v0.3.1','näher an Foto-Vorlagen'],['v0.2.0','Detailansichten'],['v0.1.0','erster klickbarer Prototype'],['Status','UI only']]
+      versions: [['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
     };
 
     const participants = [
@@ -283,7 +282,6 @@
       document.getElementById('dayLoad').textContent = `${v.dayLoad} kWh`;
       document.getElementById('socValue').textContent = `${v.soc} %`;
       document.getElementById('gridTodayValue').textContent = `${v.grid} ${active>=6?'kWh':'kW'}`;
-      document.getElementById('timePill').textContent = v.time;
       document.getElementById('timeLabel').textContent = v.time;
       renderFlow();
     }
