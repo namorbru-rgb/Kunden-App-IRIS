@@ -51,7 +51,7 @@
       background: linear-gradient(180deg, #fbfdff 0%, #f1f6fd 100%);
       border:1px solid var(--line); position:relative; overflow:hidden;
     }
-    .side-stack { display:grid; gap: 16px; padding: 10px; z-index:2; }
+    .side-stack { display:none; gap: 16px; padding: 10px; z-index:2; }
     .source {
       background: linear-gradient(180deg, #ffffff, #f7faff); border:1px solid var(--line); border-radius: 24px;
       padding: 14px; text-align:center; cursor:pointer;
@@ -144,7 +144,7 @@
         <h1>Energiefluss</h1>
       </div>
       <div class="top-right">
-        <div class="ghost" id="versionPill">Versionen · v6</div>
+        <div class="ghost" id="versionPill">Versionen · v7</div>
       </div>
     </div>
 
@@ -180,7 +180,7 @@
               <div class="floating-chip chip-3" id="chipGrid">Netz / Einspeisung 4.7 kW</div>
               <div class="floating-chip chip-4" id="chipStatus">lokal versorgt</div>
               <div class="orbit-metric orbit-pv" onclick="showDetail('pv')"><div class="label">PV aktuell</div><div class="value" id="dayPv">28.7 kW</div></div>
-              <div class="orbit-metric orbit-battery" onclick="showDetail('consumer')"><div class="label">Verbrauch aktuell</div><div class="value" id="dayLoad">12.9 kW</div></div>
+              <div class="orbit-metric orbit-battery" onclick="showDetail('battery')"><div class="label">Batterie aktuell</div><div class="value" id="batteryOrbitValue">+5.1 kW</div></div>
               <div class="orbit-metric orbit-soc" onclick="showDetail('battery')"><div class="label">SOC</div><div class="value" id="socValue">88 %</div></div>
               <div class="orbit-metric orbit-grid" onclick="showDetail('grid')"><div class="label">Netz aktuell</div><div class="value" id="gridTodayValue">4.7 kW</div></div>
             </div>
@@ -236,7 +236,7 @@
       battery: [['SOC','88 %'],['Leistung','+5.1 kW'],['Modus','lädt'],['Tageshub','41.6 kWh'],['Peak','22 kW'],['Quelle','PV']],
       grid: [['Netzbezug','0.0 kW'],['Einspeisung','4.7 kW'],['Öffentliches Netz','2.1 kW'],['vZEV','1.4 kW'],['LEG','1.2 kW'],['Status','ruhig']],
       leg: [['LEG Fluss','3.2 kW'],['Aktive Teilnehmer','3'],['Lokale Quote','81 %'],['Monatsvolumen','274 kWh'],['Top Teilnehmer','Haus A'],['Sichtbarkeit','sekundär']],
-      versions: [['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
+      versions: [['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
     };
 
     const participants = [
@@ -279,7 +279,7 @@
       document.getElementById('legValue').textContent = `${v.leg} ${active>=6?'kWh':'kW'}`;
       document.getElementById('houseValue').textContent = v.house;
       document.getElementById('dayPv').textContent = `${v.pv} ${active>=6?'kWh':'kW'}`;
-      document.getElementById('dayLoad').textContent = `${v.house} ${active>=6?'kWh':'kW'}`;
+      document.getElementById('batteryOrbitValue').textContent = `${v.battery>0?'+':''}${v.battery} ${active>=6?'kWh':'kW'}`;
       document.getElementById('socValue').textContent = `${v.soc} %`;
       document.getElementById('gridTodayValue').textContent = `${(v.grid>0?v.grid:v.export)} ${active>=6?'kWh':'kW'}`;
       document.getElementById('timeLabel').textContent = v.time;
