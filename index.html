@@ -68,6 +68,9 @@
     .path.battery { stroke: var(--battery); }
     .path.grid { stroke: var(--grid); }
     .path.feed { stroke: var(--feed); }
+    .path.leg { stroke: var(--leg); }
+    .path.vzev { stroke: var(--warn); }
+    .path.idle { stroke: rgba(112,128,154,.32); stroke-dasharray: 3 6; }
     .particle { fill:none; stroke:rgba(255,255,255,.85); stroke-dasharray:2 10; stroke-linecap:round; }
     .floating-chip {
       position:absolute; background: rgba(255,255,255,.92); border:1px solid var(--line); border-radius: 999px; padding: 8px 12px; font-size:.8rem; color:#556983; z-index:3;
@@ -83,10 +86,11 @@
     }
     .orbit-metric .label { color:var(--muted); font-size:.66rem; margin-bottom:2px; }
     .orbit-metric .value { font-size:.9rem; font-weight:800; }
-    .orbit-pv { top: 82px; left: 50%; transform: translateX(-50%); }
-    .orbit-battery { bottom: 86px; left: 158px; }
-    .orbit-soc { bottom: 86px; right: 158px; }
-    .orbit-grid { top: 50%; right: 118px; transform: translateY(-50%); }
+    .orbit-pv { top: 70px; left: 50%; transform: translateX(-50%); }
+    .orbit-battery { bottom: 78px; left: 120px; }
+    .orbit-leg { bottom: 78px; right: 120px; }
+    .orbit-grid { top: 50%; right: 90px; transform: translateY(-50%); }
+    .orbit-vzev { top: 50%; left: 90px; transform: translateY(-50%); }
     .side { display:grid; gap:14px; }
     .list { display:grid; gap:10px; }
     .row {
@@ -131,10 +135,11 @@
       .orbit-metric { min-width: 72px; padding: 5px 7px; border-radius: 13px; }
       .orbit-metric .label { font-size: .58rem; margin-bottom:1px; }
       .orbit-metric .value { font-size: .76rem; }
-      .orbit-pv { top: 10px; }
-      .orbit-grid { right: 10px; top: 50%; transform: translateY(-50%); }
-      .orbit-battery { left: 10px; bottom: 10px; }
-      .orbit-soc { right: 10px; bottom: 10px; }
+      .orbit-pv { top: 8px; left: 50%; transform: translateX(-50%); }
+      .orbit-grid { right: 8px; top: 50%; transform: translateY(-50%); }
+      .orbit-vzev { left: 8px; top: 50%; transform: translateY(-50%); }
+      .orbit-battery { left: 8px; bottom: 8px; }
+      .orbit-leg { right: 8px; bottom: 8px; }
       .card { border-radius: 24px; padding: 12px; }
       .timeline { padding: 10px; }
       .curve { height: 130px; margin-top: 8px; }
@@ -152,7 +157,7 @@
         <h1>Energiefluss</h1>
       </div>
       <div class="top-right">
-        <div class="ghost" id="versionPill">Versionen · v11</div>
+        <div class="ghost" id="versionPill">Versionen · v12</div>
       </div>
     </div>
 
@@ -167,6 +172,8 @@
                   <marker id="arrow-battery" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="var(--battery)"/></marker>
                   <marker id="arrow-grid" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="var(--grid)"/></marker>
                   <marker id="arrow-feed" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="var(--feed)"/></marker>
+                  <marker id="arrow-leg" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="var(--leg)"/></marker>
+                  <marker id="arrow-vzev" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="var(--warn)"/></marker>
                 </defs>
                 <g id="flowLayer"></g>
               </svg>
@@ -180,9 +187,10 @@
               <div class="floating-chip chip-3" id="chipGrid">Netz / Einspeisung 4.7 kW</div>
               <div class="floating-chip chip-4" id="chipStatus">lokal versorgt</div>
               <div class="orbit-metric orbit-pv" onclick="showDetail('pv')"><div class="label">PV aktuell</div><div class="value" id="dayPv">28.7 kW</div></div>
-              <div class="orbit-metric orbit-battery" onclick="showDetail('battery')"><div class="label">Batterie aktuell</div><div class="value" id="batteryOrbitValue">+5.1 kW</div></div>
-              <div class="orbit-metric orbit-soc" onclick="showDetail('battery')"><div class="label">SOC</div><div class="value" id="socValue">88 %</div></div>
+              <div class="orbit-metric orbit-battery" onclick="showDetail('battery')"><div class="label" id="batteryOrbitLabel">Batterie · 88%</div><div class="value" id="batteryOrbitValue">+5.1 kW</div></div>
               <div class="orbit-metric orbit-grid" onclick="showDetail('grid')"><div class="label">Netz aktuell</div><div class="value" id="gridTodayValue">4.7 kW</div></div>
+              <div class="orbit-metric orbit-leg" onclick="showDetail('leg')"><div class="label">LEG</div><div class="value" id="legValue">3.2 kW</div></div>
+              <div class="orbit-metric orbit-vzev" onclick="showDetail('vzev')"><div class="label">vZEV</div><div class="value" id="vzevValue">1.4 kW</div></div>
             </div>
           </div>
         </section>
@@ -214,14 +222,14 @@
 
   <script>
     const views = [
-      { time:'06:15', date:'15.05.2026', pv:3.8, house:8.6, battery:-4.2, batteryMode:'entlädt', soc:82, grid:0.6, export:0, leg:1.1, dayPv:9.8, dayLoad:21.4 },
-      { time:'09:10', date:'15.05.2026', pv:16.4, house:10.1, battery:4.8, batteryMode:'lädt', soc:76, grid:0, export:1.5, leg:2.4, dayPv:34.1, dayLoad:42.0 },
-      { time:'12:40', date:'15.05.2026', pv:34.2, house:14.8, battery:6.3, batteryMode:'lädt', soc:91, grid:0, export:7.6, leg:3.8, dayPv:78.5, dayLoad:61.7 },
-      { time:'14:25', date:'15.05.2026', pv:28.7, house:12.9, battery:5.1, batteryMode:'lädt', soc:88, grid:0, export:4.7, leg:3.2, dayPv:92.8, dayLoad:74.5 },
-      { time:'17:55', date:'15.05.2026', pv:9.1, house:17.6, battery:-5.9, batteryMode:'entlädt', soc:73, grid:2.6, export:0, leg:1.4, dayPv:108.5, dayLoad:98.2 },
-      { time:'20:10', date:'15.05.2026', pv:0.5, house:11.8, battery:-6.2, batteryMode:'entlädt', soc:61, grid:5.1, export:0, leg:0.7, dayPv:110.4, dayLoad:122.6 },
-      { time:'Tag', date:'15.05.2026', pv:110.4, house:122.6, battery:22.3, batteryMode:'Hub', soc:61, grid:18.2, export:13.8, leg:12.1, dayPv:110.4, dayLoad:122.6 },
-      { time:'Monat', date:'Mai 2026', pv:2418, house:2186, battery:684, batteryMode:'Hub', soc:68, grid:358, export:592, leg:274, dayPv:2418, dayLoad:2186 }
+      { time:'06:15', date:'15.05.2026', pv:3.8, house:8.6, battery:-4.2, batteryMode:'entlädt', soc:82, grid:0.6, export:0, leg:1.1, vzev:0.4, dayPv:9.8, dayLoad:21.4 },
+      { time:'09:10', date:'15.05.2026', pv:16.4, house:10.1, battery:4.8, batteryMode:'lädt', soc:76, grid:0, export:1.5, leg:2.4, vzev:0.9, dayPv:34.1, dayLoad:42.0 },
+      { time:'12:40', date:'15.05.2026', pv:34.2, house:14.8, battery:6.3, batteryMode:'lädt', soc:91, grid:0, export:7.6, leg:3.8, vzev:1.6, dayPv:78.5, dayLoad:61.7 },
+      { time:'14:25', date:'15.05.2026', pv:28.7, house:12.9, battery:5.1, batteryMode:'lädt', soc:88, grid:0, export:4.7, leg:3.2, vzev:1.4, dayPv:92.8, dayLoad:74.5 },
+      { time:'17:55', date:'15.05.2026', pv:9.1, house:17.6, battery:-5.9, batteryMode:'entlädt', soc:73, grid:2.6, export:0, leg:1.4, vzev:1.1, dayPv:108.5, dayLoad:98.2 },
+      { time:'20:10', date:'15.05.2026', pv:0.5, house:11.8, battery:-6.2, batteryMode:'entlädt', soc:61, grid:5.1, export:0, leg:0.7, vzev:0.5, dayPv:110.4, dayLoad:122.6 },
+      { time:'Tag', date:'15.05.2026', pv:110.4, house:122.6, battery:22.3, batteryMode:'Hub', soc:61, grid:18.2, export:13.8, leg:12.1, vzev:18.4, dayPv:110.4, dayLoad:122.6 },
+      { time:'Monat', date:'Mai 2026', pv:2418, house:2186, battery:684, batteryMode:'Hub', soc:68, grid:358, export:592, leg:274, vzev:412, dayPv:2418, dayLoad:2186 }
     ];
 
     const details = {
@@ -230,7 +238,8 @@
       battery: [['SOC','88 %'],['Leistung','+5.1 kW'],['Modus','lädt'],['Tageshub','41.6 kWh'],['Peak','22 kW'],['Quelle','PV']],
       grid: [['Netzbezug','0.0 kW'],['Einspeisung','4.7 kW'],['Öffentliches Netz','2.1 kW'],['vZEV','1.4 kW'],['LEG','1.2 kW'],['Status','ruhig']],
       leg: [['LEG Fluss','3.2 kW'],['Aktive Teilnehmer','3'],['Lokale Quote','81 %'],['Monatsvolumen','274 kWh'],['Top Teilnehmer','Haus A'],['Sichtbarkeit','sekundär']],
-      versions: [['v11','Mobile-Layout deutlich kompakter: Haus-Kreis 118 px, schmalere Orbit-Pillen, Stage 260 px, Timeline und Bottom-Nav dichter'],['v10','Pfeilspitzen entglubt: feste Pixelgröße statt strokeWidth-Skalierung, Pfade enden bündig am Kreis, schlankere Linien'],['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
+      vzev: [['vZEV Fluss','1.4 kW'],['Anschlüsse','4'],['Eigenverbrauch','78 %'],['Tagesvolumen','18.4 kWh'],['Status','aktiv'],['Sichtbarkeit','sekundär']],
+      versions: [['v12','LEG und vZEV als feste Orbit-Pillen ergänzt, Batterie+SOC zu einer Pille kombiniert, ruhende Flusslinien gestrichelt'],['v11','Mobile-Layout deutlich kompakter: Haus-Kreis 118 px, schmalere Orbit-Pillen, Stage 260 px, Timeline und Bottom-Nav dichter'],['v10','Pfeilspitzen entglubt: feste Pixelgröße statt strokeWidth-Skalierung, Pfade enden bündig am Kreis, schlankere Linien'],['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
     };
 
     const participants = [
@@ -287,16 +296,23 @@
       const specs = [
         { sel:'.orbit-pv',      cls:'pv',      arrow:'pv',      mag: pvToHouse },
         { sel:'.orbit-battery', cls:'battery', arrow:'battery', mag: Math.max(pvToBattery, battToHouse) },
-        { sel:'.orbit-grid',    cls: gridToHouse>0?'grid':'feed', arrow: gridToHouse>0?'grid':'feed', mag: Math.max(gridToHouse, exportFlow) }
+        { sel:'.orbit-grid',    cls: gridToHouse>0?'grid':'feed', arrow: gridToHouse>0?'grid':'feed', mag: Math.max(gridToHouse, exportFlow) },
+        { sel:'.orbit-leg',     cls:'leg',     arrow:'leg',     mag: v.leg },
+        { sel:'.orbit-vzev',    cls:'vzev',    arrow:'vzev',    mag: v.vzev }
       ];
       const lines = specs
         .map(s => ({ ...s, d: pathFromOrbit(s.sel), w: Math.max(2.5, Math.min(6, 2.5 + Math.log2(1 + s.mag) * 0.9)) }))
-        .filter(s => s.d && s.mag > 0);
+        .filter(s => s.d);
 
-      layer.innerHTML = lines.map(l => `
-        <path class="path ${l.cls}" d="${l.d}" stroke-width="${l.w}" marker-end="url(#arrow-${l.arrow})"></path>
-        <path class="particle" d="${l.d}" stroke-width="${Math.max(1.5,l.w*.22)}"><animate attributeName="stroke-dashoffset" from="120" to="0" dur="${Math.max(1.2,6/Math.max(l.w,1))}s" repeatCount="indefinite" /></path>
-      `).join('');
+      layer.innerHTML = lines.map(l => {
+        if (l.mag <= 0) {
+          return `<path class="path idle" d="${l.d}" stroke-width="1.5"></path>`;
+        }
+        return `
+          <path class="path ${l.cls}" d="${l.d}" stroke-width="${l.w}" marker-end="url(#arrow-${l.arrow})"></path>
+          <path class="particle" d="${l.d}" stroke-width="${Math.max(1.5,l.w*.22)}"><animate attributeName="stroke-dashoffset" from="120" to="0" dur="${Math.max(1.2,6/Math.max(l.w,1))}s" repeatCount="indefinite" /></path>
+        `;
+      }).join('');
 
       document.getElementById('chipPvHouse').textContent = `PV → Haus ${pvToHouse} ${active>=6?'kWh':'kW'}`;
       document.getElementById('chipBatteryHouse').textContent = v.battery > 0 ? `PV → Batterie ${pvToBattery} ${active>=6?'kWh':'kW'}` : `Batterie → Haus ${battToHouse} ${active>=6?'kWh':'kW'}`;
@@ -306,18 +322,21 @@
 
     function renderMain() {
       const v = views[active];
+      const unit = active>=6?'kWh':'kW';
       document.getElementById('houseValue').textContent = v.house;
-      document.getElementById('dayPv').textContent = `${v.pv} ${active>=6?'kWh':'kW'}`;
-      document.getElementById('batteryOrbitValue').textContent = `${v.battery>0?'+':''}${v.battery} ${active>=6?'kWh':'kW'}`;
-      document.getElementById('socValue').textContent = `${v.soc} %`;
-      document.getElementById('gridTodayValue').textContent = `${(v.grid>0?v.grid:v.export)} ${active>=6?'kWh':'kW'}`;
+      document.getElementById('dayPv').textContent = `${v.pv} ${unit}`;
+      document.getElementById('batteryOrbitValue').textContent = `${v.battery>0?'+':''}${v.battery} ${unit}`;
+      document.getElementById('batteryOrbitLabel').textContent = `Batterie · ${v.soc}%`;
+      document.getElementById('gridTodayValue').textContent = `${(v.grid>0?v.grid:v.export)} ${unit}`;
+      document.getElementById('legValue').textContent = `${v.leg} ${unit}`;
+      document.getElementById('vzevValue').textContent = `${v.vzev} ${unit}`;
       document.getElementById('timeLabel').textContent = v.time;
       renderFlow();
     }
 
     function showDetail(key) {
       detail = key;
-      const titleMap = { consumer:'Haus / Verbrauch', pv:'PV', battery:'Batterie', grid:'Netz', leg:'LEG', versions:'Versionsverlauf' };
+      const titleMap = { consumer:'Haus / Verbrauch', pv:'PV', battery:'Batterie', grid:'Netz', leg:'LEG', vzev:'vZEV', versions:'Versionsverlauf' };
       document.getElementById('detailTitle').textContent = titleMap[key] || 'Details';
       document.getElementById('detailSub').textContent = key === 'versions' ? 'letzte sichtbare Änderungen' : 'aktueller Drilldown';
       const kvs = document.getElementById('detailKvs');
@@ -338,7 +357,7 @@
     }
 
     function renderBottomNav() {
-      const items = [['Übersicht','consumer'],['PV','pv'],['Batterie','battery'],['Netz','grid'],['Versionen','versions']];
+      const items = [['Übersicht','consumer'],['PV','pv'],['Batterie','battery'],['Netz','grid'],['LEG','leg'],['vZEV','vzev'],['Versionen','versions']];
       document.getElementById('bottomNav').innerHTML = items.map(([a,b])=>`<button class="${detail===b?'active':''}" onclick="showDetail('${b}')">${a}</button>`).join('');
     }
 
