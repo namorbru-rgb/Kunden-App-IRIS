@@ -105,8 +105,24 @@
     }
     .seg button.active, .bottom-nav button.active { background:#172748; color:#fff; }
     .timeline { padding:14px; }
-    .curve { height: 170px; border:1px solid var(--line); border-radius: 24px; background: linear-gradient(180deg,#f7faff,#eff4fb); overflow:hidden; margin-top:12px; }
-    .slider { width:100%; margin-top:12px; accent-color: var(--battery); }
+    .series-toggles { display:flex; flex-wrap:wrap; gap:6px; margin: 10px 0 4px; }
+    .series-toggles button {
+      border:1px solid var(--line); cursor:pointer; border-radius:999px;
+      padding: 5px 10px; background:#fff; color:var(--muted); font-size:.76rem;
+      display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+    }
+    .series-toggles button .dot { width:8px; height:8px; border-radius:50%; flex:none; }
+    .series-toggles button.active { color:var(--text); border-color:#cdd6e3; background:#f4f7fc; font-weight:600; }
+    .series-toggles button:not(.active) { opacity:.55; }
+    .series-toggles button:not(.active) .dot { background:#c4ccd9 !important; }
+    .curve { height: 170px; border:1px solid var(--line); border-radius: 20px; background: linear-gradient(180deg,#f7faff,#eff4fb); overflow:hidden; margin-top:8px; }
+    .time-axis { display:flex; justify-content:space-between; padding: 4px 10px 0; font-size:.7rem; color:var(--muted); }
+    .slider { width:100%; margin-top:10px; accent-color: var(--battery); }
+    .readout { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:6px; margin-top:10px; font-size:.8rem; }
+    .readout div { display:flex; justify-content:space-between; gap:8px; padding:6px 10px; background:linear-gradient(180deg,#fff,#f8fbff); border:1px solid var(--line); border-radius:12px; align-items:center; }
+    .readout div .lbl { color:var(--muted); display:inline-flex; align-items:center; gap:6px; }
+    .readout div .lbl .dot { width:8px; height:8px; border-radius:50%; flex:none; }
+    .readout div strong { color:var(--text); }
     .detail .kvs { display:grid; gap:10px; }
     .detail .kvs div { display:flex; justify-content:space-between; gap:10px; font-size:.9rem; padding-bottom:8px; border-bottom:1px solid var(--line); }
     .bottom-nav { position: sticky; bottom: 10px; display:flex; justify-content:center; margin-top: 14px; }
@@ -142,7 +158,10 @@
       .orbit-leg { right: 8px; bottom: 8px; }
       .card { border-radius: 24px; padding: 12px; }
       .timeline { padding: 10px; }
-      .curve { height: 130px; margin-top: 8px; }
+      .curve { height: 130px; margin-top: 6px; }
+      .series-toggles button { font-size: .7rem; padding: 4px 8px; }
+      .readout { grid-template-columns: repeat(2, 1fr); font-size: .74rem; }
+      .readout div { padding: 5px 8px; }
       .seg button, .bottom-nav button { padding: 8px 12px; font-size: .85rem; }
       .bottom-nav { bottom: 6px; margin-top: 10px; }
       .bottom-nav .bar { padding: 6px; gap: 4px; }
@@ -157,7 +176,7 @@
         <h1>Energiefluss</h1>
       </div>
       <div class="top-right">
-        <div class="ghost" id="versionPill">Versionen · v13</div>
+        <div class="ghost" id="versionPill">Versionen · v14</div>
       </div>
     </div>
 
@@ -198,8 +217,11 @@
         <section class="card timeline">
           <div class="hero-head"><h2>Zeitprofil</h2><span id="timeLabel">14:25</span></div>
           <div class="seg" id="resolutionTabs"></div>
+          <div class="series-toggles" id="seriesToggles"></div>
           <div class="curve" id="curveChart"></div>
-          <input class="slider" id="timeSlider" type="range" min="0" max="7" value="3" />
+          <div class="time-axis" id="timeAxis"></div>
+          <input class="slider" id="timeSlider" type="range" min="0" max="5" value="3" />
+          <div class="readout" id="profileReadout"></div>
         </section>
       </div>
 
@@ -222,15 +244,28 @@
 
   <script>
     const views = [
-      { time:'06:15', date:'15.05.2026', pv:3.8, house:8.6, battery:-4.2, batteryMode:'entlädt', soc:82, grid:0.6, export:0, leg:1.1, vzev:0.4, dayPv:9.8, dayLoad:21.4 },
-      { time:'09:10', date:'15.05.2026', pv:16.4, house:10.1, battery:4.8, batteryMode:'lädt', soc:76, grid:0, export:1.5, leg:2.4, vzev:0.9, dayPv:34.1, dayLoad:42.0 },
-      { time:'12:40', date:'15.05.2026', pv:34.2, house:14.8, battery:6.3, batteryMode:'lädt', soc:91, grid:0, export:7.6, leg:3.8, vzev:1.6, dayPv:78.5, dayLoad:61.7 },
-      { time:'14:25', date:'15.05.2026', pv:28.7, house:12.9, battery:5.1, batteryMode:'lädt', soc:88, grid:0, export:4.7, leg:3.2, vzev:1.4, dayPv:92.8, dayLoad:74.5 },
-      { time:'17:55', date:'15.05.2026', pv:9.1, house:17.6, battery:-5.9, batteryMode:'entlädt', soc:73, grid:2.6, export:0, leg:1.4, vzev:1.1, dayPv:108.5, dayLoad:98.2 },
-      { time:'20:10', date:'15.05.2026', pv:0.5, house:11.8, battery:-6.2, batteryMode:'entlädt', soc:61, grid:5.1, export:0, leg:0.7, vzev:0.5, dayPv:110.4, dayLoad:122.6 },
-      { time:'Tag', date:'15.05.2026', pv:110.4, house:122.6, battery:22.3, batteryMode:'Hub', soc:61, grid:18.2, export:13.8, leg:12.1, vzev:18.4, dayPv:110.4, dayLoad:122.6 },
-      { time:'Monat', date:'Mai 2026', pv:2418, house:2186, battery:684, batteryMode:'Hub', soc:68, grid:358, export:592, leg:274, vzev:412, dayPv:2418, dayLoad:2186 }
+      { time:'06:15', date:'15.05.2026', pv:3.8, house:8.6, battery:-4.2, batteryMode:'entlädt', soc:82, grid:0.6, export:0, leg:1.1, vzev:0.4, heating:3.2, mobility:0.5, business:4.9, dayPv:9.8, dayLoad:21.4 },
+      { time:'09:10', date:'15.05.2026', pv:16.4, house:10.1, battery:4.8, batteryMode:'lädt', soc:76, grid:0, export:1.5, leg:2.4, vzev:0.9, heating:2.8, mobility:1.4, business:5.9, dayPv:34.1, dayLoad:42.0 },
+      { time:'12:40', date:'15.05.2026', pv:34.2, house:14.8, battery:6.3, batteryMode:'lädt', soc:91, grid:0, export:7.6, leg:3.8, vzev:1.6, heating:1.8, mobility:2.1, business:10.9, dayPv:78.5, dayLoad:61.7 },
+      { time:'14:25', date:'15.05.2026', pv:28.7, house:12.9, battery:5.1, batteryMode:'lädt', soc:88, grid:0, export:4.7, leg:3.2, vzev:1.4, heating:4.1, mobility:1.8, business:7.0, dayPv:92.8, dayLoad:74.5 },
+      { time:'17:55', date:'15.05.2026', pv:9.1, house:17.6, battery:-5.9, batteryMode:'entlädt', soc:73, grid:2.6, export:0, leg:1.4, vzev:1.1, heating:5.6, mobility:4.2, business:7.8, dayPv:108.5, dayLoad:98.2 },
+      { time:'20:10', date:'15.05.2026', pv:0.5, house:11.8, battery:-6.2, batteryMode:'entlädt', soc:61, grid:5.1, export:0, leg:0.7, vzev:0.5, heating:4.8, mobility:2.6, business:4.4, dayPv:110.4, dayLoad:122.6 },
+      { time:'Tag', date:'15.05.2026', pv:110.4, house:122.6, battery:22.3, batteryMode:'Hub', soc:61, grid:18.2, export:13.8, leg:12.1, vzev:18.4, heating:30.4, mobility:24.8, business:67.4, dayPv:110.4, dayLoad:122.6 },
+      { time:'Monat', date:'Mai 2026', pv:2418, house:2186, battery:684, batteryMode:'Hub', soc:68, grid:358, export:592, leg:274, vzev:412, heating:548, mobility:436, business:1202, dayPv:2418, dayLoad:2186 }
     ];
+
+    const seriesDefs = [
+      { key:'pv',       label:'PV',        color:'#f8c64e', get: v => v.pv },
+      { key:'house',    label:'Verbrauch', color:'#4fd18e', get: v => v.house },
+      { key:'battery',  label:'Batterie',  color:'#4b7cff', get: v => Math.abs(v.battery) },
+      { key:'grid',     label:'Netz',      color:'#f55e68', get: v => Math.max(v.grid, v.export) },
+      { key:'leg',      label:'LEG',       color:'#8d6dff', get: v => v.leg },
+      { key:'vzev',     label:'vZEV',      color:'#ff9c49', get: v => v.vzev },
+      { key:'heating',  label:'Heizung',   color:'#ff7090', get: v => v.heating },
+      { key:'mobility', label:'Mobilität', color:'#5a8de0', get: v => v.mobility },
+      { key:'business', label:'Gewerbe',   color:'#7a8aa3', get: v => v.business }
+    ];
+    const activeSeries = new Set(['pv','house','battery','grid']);
 
     const details = {
       consumer: [['Hausverbrauch','12.9 kW'],['Heizung','4.1 kW'],['Mobilität','1.8 kW'],['Gewerbe','7.0 kW'],['größter Verbraucher','CNC Maschine'],['Versorgung','PV + Batterie']],
@@ -239,7 +274,7 @@
       grid: [['Netzbezug','0.0 kW'],['Einspeisung','4.7 kW'],['Öffentliches Netz','2.1 kW'],['vZEV','1.4 kW'],['LEG','1.2 kW'],['Status','ruhig']],
       leg: [['LEG Fluss','3.2 kW'],['Aktive Teilnehmer','3'],['Lokale Quote','81 %'],['Monatsvolumen','274 kWh'],['Top Teilnehmer','Haus A'],['Sichtbarkeit','sekundär']],
       vzev: [['vZEV Fluss','1.4 kW'],['Anschlüsse','4'],['Eigenverbrauch','78 %'],['Tagesvolumen','18.4 kWh'],['Status','aktiv'],['Sichtbarkeit','sekundär']],
-      versions: [['v13','Flussrichtung korrigiert: bei PV-Überschuss zeigen Batterie/Netz/LEG/vZEV vom Haus weg, bei Bezug zum Haus hin'],['v12','LEG und vZEV als feste Orbit-Pillen ergänzt, Batterie+SOC zu einer Pille kombiniert, ruhende Flusslinien gestrichelt'],['v11','Mobile-Layout deutlich kompakter: Haus-Kreis 118 px, schmalere Orbit-Pillen, Stage 260 px, Timeline und Bottom-Nav dichter'],['v10','Pfeilspitzen entglubt: feste Pixelgröße statt strokeWidth-Skalierung, Pfade enden bündig am Kreis, schlankere Linien'],['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
+      versions: [['v14','Zeitprofil komplett überarbeitet: Toggle-Chips für PV/Haus/Batterie/Netz/LEG/vZEV/Heizung/Mobilität/Gewerbe, Uhrzeit-Achse, Werte-Tabelle am Schiebereglerpunkt'],['v13','Flussrichtung korrigiert: bei PV-Überschuss zeigen Batterie/Netz/LEG/vZEV vom Haus weg, bei Bezug zum Haus hin'],['v12','LEG und vZEV als feste Orbit-Pillen ergänzt, Batterie+SOC zu einer Pille kombiniert, ruhende Flusslinien gestrichelt'],['v11','Mobile-Layout deutlich kompakter: Haus-Kreis 118 px, schmalere Orbit-Pillen, Stage 260 px, Timeline und Bottom-Nav dichter'],['v10','Pfeilspitzen entglubt: feste Pixelgröße statt strokeWidth-Skalierung, Pfade enden bündig am Kreis, schlankere Linien'],['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
     };
 
     const participants = [
@@ -355,10 +390,55 @@
 
     function renderTimeline() {
       document.getElementById('resolutionTabs').innerHTML = ['5 Min','10 Min','Stunde','Tag','Woche','Monat'].map((r,i)=>`<button class="${i===0?'active':''}">${r}</button>`).join('');
-      const vals = views.slice(0,6).map(v=>v.house);
-      const pts = vals.map((v,i)=>`${26+i*95},${146-v*5.6}`).join(' ');
-      const pvs = views.slice(0,6).map(v=>v.pv).map((v,i)=>`${26+i*95},${146-v*3.8}`).join(' ');
-      document.getElementById('curveChart').innerHTML = `<svg viewBox="0 0 620 170" preserveAspectRatio="none"><g opacity=".14" stroke="#6f84a3"><line x1="0" y1="34" x2="620" y2="34"/><line x1="0" y1="68" x2="620" y2="68"/><line x1="0" y1="102" x2="620" y2="102"/><line x1="0" y1="136" x2="620" y2="136"/></g><polyline fill="none" stroke="var(--load)" stroke-width="4" points="${pts}"/><polyline fill="none" stroke="var(--pv)" stroke-width="4" points="${pvs}"/><line x1="${26+active*95}" x2="${26+active*95}" y1="14" y2="152" stroke="var(--battery)" stroke-width="3" stroke-dasharray="4 7"/></svg>`;
+
+      document.getElementById('seriesToggles').innerHTML = seriesDefs.map(s =>
+        `<button class="${activeSeries.has(s.key)?'active':''}" onclick="toggleSeries('${s.key}')"><span class="dot" style="background:${s.color}"></span>${s.label}</button>`
+      ).join('');
+
+      const timeViews = views.slice(0,6);
+      const visible = seriesDefs.filter(s => activeSeries.has(s.key));
+      const maxY = Math.max(0.1, ...visible.flatMap(s => timeViews.map(v => s.get(v))));
+
+      const W = 620, H = 170, PX = 28, PY = 14;
+      const xAt = i => PX + i * (W - 2*PX) / 5;
+      const yAt = val => H - PY - (val/maxY) * (H - 2*PY - 6);
+
+      const gridLines = [0.25,0.5,0.75,1].map(f =>
+        `<line x1="0" y1="${(H-PY) - f*(H-2*PY-6)}" x2="${W}" y2="${(H-PY) - f*(H-2*PY-6)}" stroke="#6f84a3" opacity=".11"/>`
+      ).join('');
+
+      const lines = visible.map(s => {
+        const pts = timeViews.map((v,i) => `${xAt(i).toFixed(0)},${yAt(s.get(v)).toFixed(0)}`).join(' ');
+        return `<polyline fill="none" stroke="${s.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${pts}" opacity=".92"/>`;
+      }).join('');
+
+      const cIdx = Math.min(active, 5);
+      const cx = xAt(cIdx);
+      const cursor = `<line x1="${cx}" x2="${cx}" y1="${PY-4}" y2="${H-PY+4}" stroke="var(--battery)" stroke-width="2" stroke-dasharray="4 6" opacity=".7"/>` +
+        visible.map(s => `<circle cx="${cx}" cy="${yAt(s.get(timeViews[cIdx])).toFixed(0)}" r="3.5" fill="${s.color}" stroke="#fff" stroke-width="2"/>`).join('');
+
+      document.getElementById('curveChart').innerHTML =
+        `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${gridLines}${lines}${cursor}</svg>`;
+
+      document.getElementById('timeAxis').innerHTML = timeViews.map(v => `<span>${v.time}</span>`).join('');
+
+      renderReadout();
+    }
+
+    function toggleSeries(key) {
+      if (activeSeries.has(key)) activeSeries.delete(key);
+      else activeSeries.add(key);
+      renderTimeline();
+    }
+
+    function renderReadout() {
+      const v = views[Math.min(active, 5)];
+      const unit = 'kW';
+      const visible = seriesDefs.filter(s => activeSeries.has(s.key));
+      const items = visible.length ? visible : [{ key:'_', label:'keine Auswahl', color:'#c4ccd9', get:()=>0 }];
+      document.getElementById('profileReadout').innerHTML = items.map(s =>
+        `<div><span class="lbl"><span class="dot" style="background:${s.color}"></span>${s.label}</span><strong>${s.get(v).toFixed(1)} ${unit}</strong></div>`
+      ).join('');
     }
 
     function renderBottomNav() {
