@@ -157,7 +157,7 @@
         <h1>Energiefluss</h1>
       </div>
       <div class="top-right">
-        <div class="ghost" id="versionPill">Versionen · v12</div>
+        <div class="ghost" id="versionPill">Versionen · v13</div>
       </div>
     </div>
 
@@ -239,7 +239,7 @@
       grid: [['Netzbezug','0.0 kW'],['Einspeisung','4.7 kW'],['Öffentliches Netz','2.1 kW'],['vZEV','1.4 kW'],['LEG','1.2 kW'],['Status','ruhig']],
       leg: [['LEG Fluss','3.2 kW'],['Aktive Teilnehmer','3'],['Lokale Quote','81 %'],['Monatsvolumen','274 kWh'],['Top Teilnehmer','Haus A'],['Sichtbarkeit','sekundär']],
       vzev: [['vZEV Fluss','1.4 kW'],['Anschlüsse','4'],['Eigenverbrauch','78 %'],['Tagesvolumen','18.4 kWh'],['Status','aktiv'],['Sichtbarkeit','sekundär']],
-      versions: [['v12','LEG und vZEV als feste Orbit-Pillen ergänzt, Batterie+SOC zu einer Pille kombiniert, ruhende Flusslinien gestrichelt'],['v11','Mobile-Layout deutlich kompakter: Haus-Kreis 118 px, schmalere Orbit-Pillen, Stage 260 px, Timeline und Bottom-Nav dichter'],['v10','Pfeilspitzen entglubt: feste Pixelgröße statt strokeWidth-Skalierung, Pfade enden bündig am Kreis, schlankere Linien'],['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
+      versions: [['v13','Flussrichtung korrigiert: bei PV-Überschuss zeigen Batterie/Netz/LEG/vZEV vom Haus weg, bei Bezug zum Haus hin'],['v12','LEG und vZEV als feste Orbit-Pillen ergänzt, Batterie+SOC zu einer Pille kombiniert, ruhende Flusslinien gestrichelt'],['v11','Mobile-Layout deutlich kompakter: Haus-Kreis 118 px, schmalere Orbit-Pillen, Stage 260 px, Timeline und Bottom-Nav dichter'],['v10','Pfeilspitzen entglubt: feste Pixelgröße statt strokeWidth-Skalierung, Pfade enden bündig am Kreis, schlankere Linien'],['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
     };
 
     const participants = [
@@ -264,7 +264,7 @@
       const cy = coreBox.top + coreBox.height/2 - stageBox.top;
       const coreR = coreBox.width/2;
 
-      function pathFromOrbit(sel) {
+      function pathFromOrbit(sel, outbound) {
         const o = document.querySelector(sel);
         if (!o) return null;
         const ob = o.getBoundingClientRect();
@@ -284,6 +284,9 @@
         const bend = Math.min(22, dist * 0.14);
         const mx = (sx+ex)/2 + uy * bend;
         const my = (sy+ey)/2 - ux * bend;
+        if (outbound) {
+          return `M ${ex.toFixed(1)} ${ey.toFixed(1)} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${sx.toFixed(1)} ${sy.toFixed(1)}`;
+        }
         return `M ${sx.toFixed(1)} ${sy.toFixed(1)} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
       }
 
@@ -292,16 +295,18 @@
       const pvToBattery = v.battery > 0 ? v.battery : 0;
       const gridToHouse = v.grid;
       const exportFlow = v.export;
+      const surplus = v.pv > v.house;
 
       const specs = [
-        { sel:'.orbit-pv',      cls:'pv',      arrow:'pv',      mag: pvToHouse },
-        { sel:'.orbit-battery', cls:'battery', arrow:'battery', mag: Math.max(pvToBattery, battToHouse) },
-        { sel:'.orbit-grid',    cls: gridToHouse>0?'grid':'feed', arrow: gridToHouse>0?'grid':'feed', mag: Math.max(gridToHouse, exportFlow) },
-        { sel:'.orbit-leg',     cls:'leg',     arrow:'leg',     mag: v.leg },
-        { sel:'.orbit-vzev',    cls:'vzev',    arrow:'vzev',    mag: v.vzev }
+        { sel:'.orbit-pv',      cls:'pv',      arrow:'pv',      mag: pvToHouse,                              outbound: false },
+        { sel:'.orbit-battery', cls:'battery', arrow:'battery', mag: Math.max(pvToBattery, battToHouse),     outbound: v.battery > 0 },
+        { sel:'.orbit-grid',    cls: gridToHouse>0?'grid':'feed', arrow: gridToHouse>0?'grid':'feed',
+                                                                 mag: Math.max(gridToHouse, exportFlow),     outbound: exportFlow > 0 },
+        { sel:'.orbit-leg',     cls:'leg',     arrow:'leg',     mag: v.leg,                                  outbound: surplus },
+        { sel:'.orbit-vzev',    cls:'vzev',    arrow:'vzev',    mag: v.vzev,                                 outbound: surplus }
       ];
       const lines = specs
-        .map(s => ({ ...s, d: pathFromOrbit(s.sel), w: Math.max(2.5, Math.min(6, 2.5 + Math.log2(1 + s.mag) * 0.9)) }))
+        .map(s => ({ ...s, d: pathFromOrbit(s.sel, s.outbound), w: Math.max(2.5, Math.min(6, 2.5 + Math.log2(1 + s.mag) * 0.9)) }))
         .filter(s => s.d);
 
       layer.innerHTML = lines.map(l => {
