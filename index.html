@@ -188,7 +188,7 @@
         <h1>Energiefluss</h1>
       </div>
       <div class="top-right">
-        <div class="ghost" id="versionPill">Versionen · v15</div>
+        <div class="ghost" id="versionPill">Versionen · v16</div>
       </div>
     </div>
 
@@ -287,6 +287,84 @@
     const granularities = ['5 Min','10 Min','15 Min','Stunde','Tag','Monat'];
     let activeGranularity = '5 Min';
 
+    const round1 = x => Math.round(x*10)/10;
+    const numericFields = ['pv','house','battery','soc','grid','export','leg','vzev','heating','mobility','business'];
+    const minuteOfDay = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+    const dayAnchors = views.slice(0,6).map(v => ({ t: minuteOfDay(v.time), v }));
+
+    function interpAtMinute(t, field) {
+      if (t <= dayAnchors[0].t) return dayAnchors[0].v[field];
+      const last = dayAnchors[dayAnchors.length-1];
+      if (t >= last.t) return last.v[field];
+      for (let i = 0; i < dayAnchors.length-1; i++) {
+        if (t <= dayAnchors[i+1].t) {
+          const r = (t - dayAnchors[i].t) / (dayAnchors[i+1].t - dayAnchors[i].t);
+          return dayAnchors[i].v[field] * (1-r) + dayAnchors[i+1].v[field] * r;
+        }
+      }
+      return 0;
+    }
+
+    function pointAtMinute(t) {
+      const p = {
+        time: `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`,
+        date: '15.05.2026'
+      };
+      numericFields.forEach(f => p[f] = round1(interpAtMinute(t, f)));
+      p.batteryMode = p.battery > 0.05 ? 'lädt' : (p.battery < -0.05 ? 'entlädt' : 'idle');
+      return p;
+    }
+
+    function intraDayPoints(stepMin, count) {
+      const endMin = 14*60 + 25;
+      return Array.from({length:count}, (_,i) => pointAtMinute(Math.max(0, endMin - (count-1-i)*stepMin)));
+    }
+
+    const tagPoints = [];
+    const monatPoints = [];
+    (function buildAggregates(){
+      for (let i = 6; i >= 0; i--) {
+        const day = 15 - i;
+        const fac = 0.7 + 0.35*Math.sin((day*1.3) % 6);
+        tagPoints.push({
+          time: `${day}.5.`, date: `${String(day).padStart(2,'0')}.05.2026`,
+          pv: round1(110*fac), house: round1(122*(1.1-fac*0.2)),
+          battery: round1(20*fac), batteryMode:'Hub', soc: 60+Math.round(15*fac),
+          grid: round1(18*(1.2-fac)), export: round1(14*fac),
+          leg: round1(12*fac), vzev: round1(18*fac),
+          heating: round1(30*(1.2-fac*0.4)), mobility: round1(25*fac), business: round1(67*fac)
+        });
+      }
+      const months = ['Jun 25','Jul 25','Aug 25','Sep 25','Okt 25','Nov 25','Dez 25','Jan 26','Feb 26','Mär 26','Apr 26','Mai 26'];
+      for (let i = 0; i < 12; i++) {
+        const fac = 0.45 + 0.55*Math.abs(Math.sin(i*0.55));
+        monatPoints.push({
+          time: months[i], date: months[i],
+          pv: Math.round(1200+1500*fac), house: Math.round(2000+500*(1-fac*0.6)),
+          battery: Math.round(450+350*fac), batteryMode:'Hub', soc: 55+Math.round(15*fac),
+          grid: Math.round(300+400*(1-fac)), export: Math.round(250+450*fac),
+          leg: Math.round(180+200*fac), vzev: Math.round(250+300*fac),
+          heating: Math.round(450+250*(1-fac*0.5)), mobility: Math.round(340+150*fac), business: Math.round(750+800*fac)
+        });
+      }
+    })();
+
+    function buildPoints(g) {
+      switch(g) {
+        case '5 Min':  return intraDayPoints(5, 12);
+        case '10 Min': return intraDayPoints(10, 12);
+        case '15 Min': return intraDayPoints(15, 12);
+        case 'Stunde': return intraDayPoints(60, 12);
+        case 'Tag':    return tagPoints.slice();
+        case 'Monat':  return monatPoints.slice();
+      }
+      return intraDayPoints(5, 12);
+    }
+
+    let chartPoints = buildPoints(activeGranularity);
+    const aggGranularities = new Set(['Tag','Monat']);
+    const currentUnit = () => aggGranularities.has(activeGranularity) ? 'kWh' : 'kW';
+
     const details = {
       consumer: [['Hausverbrauch','12.9 kW'],['Heizung','4.1 kW'],['Mobilität','1.8 kW'],['Gewerbe','7.0 kW'],['größter Verbraucher','CNC Maschine'],['Versorgung','PV + Batterie']],
       pv: [['PV aktuell','28.7 kW'],['Direkt ins Haus','12.9 kW'],['In Batterie','5.1 kW'],['Netzeinspeisung','4.7 kW'],['Tagesproduktion','92.8 kWh'],['Status','stabil']],
@@ -294,18 +372,18 @@
       grid: [['Netzbezug','0.0 kW'],['Einspeisung','4.7 kW'],['Öffentliches Netz','2.1 kW'],['vZEV','1.4 kW'],['LEG','1.2 kW'],['Status','ruhig']],
       leg: [['LEG Fluss','3.2 kW'],['Aktive Teilnehmer','3'],['Lokale Quote','81 %'],['Monatsvolumen','274 kWh'],['Top Teilnehmer','Haus A'],['Sichtbarkeit','sekundär']],
       vzev: [['vZEV Fluss','1.4 kW'],['Anschlüsse','4'],['Eigenverbrauch','78 %'],['Tagesvolumen','18.4 kWh'],['Status','aktiv'],['Sichtbarkeit','sekundär']],
-      versions: [['v15','Header schlanker, Werte-Tabelle dient zugleich als An/Aus-Schalter pro Serie, Schritt-Pfeile zurück/vor neben "Zeitprofil", Auflösung-Tabs anklickbar (5/10/15 Min, Stunde, Tag, Monat)'],['v14','Zeitprofil komplett überarbeitet: Toggle-Chips für PV/Haus/Batterie/Netz/LEG/vZEV/Heizung/Mobilität/Gewerbe, Uhrzeit-Achse, Werte-Tabelle am Schiebereglerpunkt'],['v13','Flussrichtung korrigiert: bei PV-Überschuss zeigen Batterie/Netz/LEG/vZEV vom Haus weg, bei Bezug zum Haus hin'],['v12','LEG und vZEV als feste Orbit-Pillen ergänzt, Batterie+SOC zu einer Pille kombiniert, ruhende Flusslinien gestrichelt'],['v11','Mobile-Layout deutlich kompakter: Haus-Kreis 118 px, schmalere Orbit-Pillen, Stage 260 px, Timeline und Bottom-Nav dichter'],['v10','Pfeilspitzen entglubt: feste Pixelgröße statt strokeWidth-Skalierung, Pfade enden bündig am Kreis, schlankere Linien'],['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
+      versions: [['v16','Auflösung wirkt jetzt echt: 5/10/15 Min und Stunde zeigen interpolierte Werte um 14:25, Tag liefert 7-Tage-Reihe, Monat 12-Monate-Reihe; Einheit wechselt zu kWh bei Aggregaten'],['v15','Header schlanker, Werte-Tabelle dient zugleich als An/Aus-Schalter pro Serie, Schritt-Pfeile zurück/vor neben "Zeitprofil", Auflösung-Tabs anklickbar (5/10/15 Min, Stunde, Tag, Monat)'],['v14','Zeitprofil komplett überarbeitet: Toggle-Chips für PV/Haus/Batterie/Netz/LEG/vZEV/Heizung/Mobilität/Gewerbe, Uhrzeit-Achse, Werte-Tabelle am Schiebereglerpunkt'],['v13','Flussrichtung korrigiert: bei PV-Überschuss zeigen Batterie/Netz/LEG/vZEV vom Haus weg, bei Bezug zum Haus hin'],['v12','LEG und vZEV als feste Orbit-Pillen ergänzt, Batterie+SOC zu einer Pille kombiniert, ruhende Flusslinien gestrichelt'],['v11','Mobile-Layout deutlich kompakter: Haus-Kreis 118 px, schmalere Orbit-Pillen, Stage 260 px, Timeline und Bottom-Nav dichter'],['v10','Pfeilspitzen entglubt: feste Pixelgröße statt strokeWidth-Skalierung, Pfade enden bündig am Kreis, schlankere Linien'],['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
     };
 
     const participants = [
       ['Haus A','2.4 kW Bezug · 74% PV'],['Werkhalle Nord','1.8 kW Bezug · 48% PV'],['Mieter Süd','0.8 kW Bezug · 82% PV']
     ];
 
-    let active = 3;
+    let active = chartPoints.length - 1;
     let detail = 'consumer';
 
     function renderFlow() {
-      const v = views[active];
+      const v = chartPoints[active];
       const stage = document.querySelector('.center-stage');
       const svg = document.querySelector('svg.flow');
       const core = document.querySelector('.home-core');
@@ -374,15 +452,16 @@
         `;
       }).join('');
 
-      document.getElementById('chipPvHouse').textContent = `PV → Haus ${pvToHouse} ${active>=6?'kWh':'kW'}`;
-      document.getElementById('chipBatteryHouse').textContent = v.battery > 0 ? `PV → Batterie ${pvToBattery} ${active>=6?'kWh':'kW'}` : `Batterie → Haus ${battToHouse} ${active>=6?'kWh':'kW'}`;
-      document.getElementById('chipGrid').textContent = gridToHouse > 0 ? `Netz → Haus ${gridToHouse} ${active>=6?'kWh':'kW'}` : `Einspeisung ${exportFlow} ${active>=6?'kWh':'kW'}`;
+      const unit = currentUnit();
+      document.getElementById('chipPvHouse').textContent = `PV → Haus ${pvToHouse} ${unit}`;
+      document.getElementById('chipBatteryHouse').textContent = v.battery > 0 ? `PV → Batterie ${pvToBattery} ${unit}` : `Batterie → Haus ${battToHouse} ${unit}`;
+      document.getElementById('chipGrid').textContent = gridToHouse > 0 ? `Netz → Haus ${gridToHouse} ${unit}` : `Einspeisung ${exportFlow} ${unit}`;
       document.getElementById('chipStatus').textContent = gridToHouse > 0 ? 'teilweise Netzbezug' : 'lokal versorgt';
     }
 
     function renderMain() {
-      const v = views[active];
-      const unit = active>=6?'kWh':'kW';
+      const v = chartPoints[active];
+      const unit = currentUnit();
       document.getElementById('houseValue').textContent = v.house;
       document.getElementById('dayPv').textContent = `${v.pv} ${unit}`;
       document.getElementById('batteryOrbitValue').textContent = `${v.battery>0?'+':''}${v.battery} ${unit}`;
@@ -413,12 +492,14 @@
         `<button class="${r===activeGranularity?'active':''}" onclick="setGranularity('${r}')">${r}</button>`
       ).join('');
 
-      const timeViews = views.slice(0,6);
+      const pts = chartPoints;
+      const N = pts.length;
       const visible = seriesDefs.filter(s => activeSeries.has(s.key));
-      const maxY = Math.max(0.1, ...(visible.length?visible:seriesDefs).flatMap(s => timeViews.map(v => s.get(v))));
+      const seriesForScale = visible.length ? visible : seriesDefs;
+      const maxY = Math.max(0.1, ...seriesForScale.flatMap(s => pts.map(p => s.get(p))));
 
       const W = 620, H = 170, PX = 28, PY = 14;
-      const xAt = i => PX + i * (W - 2*PX) / 5;
+      const xAt = i => N <= 1 ? W/2 : PX + i * (W - 2*PX) / (N-1);
       const yAt = val => H - PY - (val/maxY) * (H - 2*PY - 6);
 
       const gridLines = [0.25,0.5,0.75,1].map(f =>
@@ -426,22 +507,30 @@
       ).join('');
 
       const lines = visible.map(s => {
-        const pts = timeViews.map((v,i) => `${xAt(i).toFixed(0)},${yAt(s.get(v)).toFixed(0)}`).join(' ');
-        return `<polyline fill="none" stroke="${s.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${pts}" opacity=".92"/>`;
+        const points = pts.map((p,i) => `${xAt(i).toFixed(0)},${yAt(s.get(p)).toFixed(0)}`).join(' ');
+        return `<polyline fill="none" stroke="${s.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${points}" opacity=".92"/>`;
       }).join('');
 
-      const cIdx = Math.min(active, 5);
+      const cIdx = Math.min(Math.max(active,0), N-1);
       const cx = xAt(cIdx);
       const cursor = `<line x1="${cx}" x2="${cx}" y1="${PY-4}" y2="${H-PY+4}" stroke="var(--battery)" stroke-width="2" stroke-dasharray="4 6" opacity=".7"/>` +
-        visible.map(s => `<circle cx="${cx}" cy="${yAt(s.get(timeViews[cIdx])).toFixed(0)}" r="3.5" fill="${s.color}" stroke="#fff" stroke-width="2"/>`).join('');
+        visible.map(s => `<circle cx="${cx}" cy="${yAt(s.get(pts[cIdx])).toFixed(0)}" r="3.5" fill="${s.color}" stroke="#fff" stroke-width="2"/>`).join('');
 
       document.getElementById('curveChart').innerHTML =
         `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${gridLines}${lines}${cursor}</svg>`;
 
-      document.getElementById('timeAxis').innerHTML = timeViews.map(v => `<span>${v.time}</span>`).join('');
+      const maxLabels = 6;
+      const stride = Math.max(1, Math.ceil(N / maxLabels));
+      document.getElementById('timeAxis').innerHTML = pts.map((p,i) =>
+        (i === 0 || i === N-1 || i % stride === 0) ? `<span>${p.time}</span>` : `<span></span>`
+      ).join('');
+
+      const slider = document.getElementById('timeSlider');
+      slider.max = String(N - 1);
+      if (Number(slider.value) !== active) slider.value = String(active);
 
       document.getElementById('stepPrev').disabled = active <= 0;
-      document.getElementById('stepNext').disabled = active >= 5;
+      document.getElementById('stepNext').disabled = active >= N - 1;
 
       renderReadout();
     }
@@ -453,26 +542,30 @@
     }
 
     function setGranularity(g) {
+      if (activeGranularity === g) return;
       activeGranularity = g;
+      chartPoints = buildPoints(g);
+      active = chartPoints.length - 1;
+      renderMain();
       renderTimeline();
     }
 
     function stepTime(delta) {
-      const next = Math.max(0, Math.min(5, active + delta));
+      const next = Math.max(0, Math.min(chartPoints.length - 1, active + delta));
       if (next === active) return;
       active = next;
-      document.getElementById('timeSlider').value = String(active);
       renderMain();
       renderTimeline();
     }
 
     function renderReadout() {
-      const v = views[Math.min(active, 5)];
+      const v = chartPoints[active];
+      const unit = currentUnit();
       document.getElementById('profileReadout').innerHTML = seriesDefs.map(s => {
         const on = activeSeries.has(s.key);
         return `<button class="${on?'':'off'}" onclick="toggleSeries('${s.key}')">
           <span class="lbl"><span class="dot" style="background:${s.color}"></span>${s.label}</span>
-          <strong>${s.get(v).toFixed(1)} kW</strong>
+          <strong>${s.get(v).toFixed(1)} ${unit}</strong>
         </button>`;
       }).join('');
     }
@@ -483,7 +576,11 @@
     }
 
     document.getElementById('versionPill').onclick = ()=>showDetail('versions');
-    document.getElementById('timeSlider').addEventListener('input', e => { active = Number(e.target.value); renderMain(); renderTimeline(); });
+    document.getElementById('timeSlider').addEventListener('input', e => {
+      active = Math.max(0, Math.min(chartPoints.length - 1, Number(e.target.value)));
+      renderMain();
+      renderTimeline();
+    });
     window.addEventListener('resize', () => requestAnimationFrame(renderFlow));
 
     renderParticipants();
