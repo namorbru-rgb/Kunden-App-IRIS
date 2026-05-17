@@ -105,24 +105,31 @@
     }
     .seg button.active, .bottom-nav button.active { background:#172748; color:#fff; }
     .timeline { padding:14px; }
-    .series-toggles { display:flex; flex-wrap:wrap; gap:6px; margin: 10px 0 4px; }
-    .series-toggles button {
-      border:1px solid var(--line); cursor:pointer; border-radius:999px;
-      padding: 5px 10px; background:#fff; color:var(--muted); font-size:.76rem;
-      display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+    .title-nav { display:flex; align-items:center; gap:8px; }
+    .step-btn {
+      width:28px; height:28px; border-radius:999px; border:1px solid var(--line);
+      background:#fff; color:var(--text); font-size:1.15rem; line-height:1;
+      cursor:pointer; display:grid; place-items:center; padding:0;
     }
-    .series-toggles button .dot { width:8px; height:8px; border-radius:50%; flex:none; }
-    .series-toggles button.active { color:var(--text); border-color:#cdd6e3; background:#f4f7fc; font-weight:600; }
-    .series-toggles button:not(.active) { opacity:.55; }
-    .series-toggles button:not(.active) .dot { background:#c4ccd9 !important; }
+    .step-btn:hover { background:#f4f7fc; }
+    .step-btn:disabled { opacity:.35; cursor:not-allowed; }
     .curve { height: 170px; border:1px solid var(--line); border-radius: 20px; background: linear-gradient(180deg,#f7faff,#eff4fb); overflow:hidden; margin-top:8px; }
     .time-axis { display:flex; justify-content:space-between; padding: 4px 10px 0; font-size:.7rem; color:var(--muted); }
     .slider { width:100%; margin-top:10px; accent-color: var(--battery); }
     .readout { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:6px; margin-top:10px; font-size:.8rem; }
-    .readout div { display:flex; justify-content:space-between; gap:8px; padding:6px 10px; background:linear-gradient(180deg,#fff,#f8fbff); border:1px solid var(--line); border-radius:12px; align-items:center; }
-    .readout div .lbl { color:var(--muted); display:inline-flex; align-items:center; gap:6px; }
-    .readout div .lbl .dot { width:8px; height:8px; border-radius:50%; flex:none; }
-    .readout div strong { color:var(--text); }
+    .readout button {
+      display:flex; justify-content:space-between; gap:8px; padding:7px 10px;
+      background:linear-gradient(180deg,#fff,#f8fbff); border:1px solid var(--line);
+      border-radius:12px; align-items:center; cursor:pointer; text-align:left;
+      font: inherit; color: var(--text); width:100%;
+    }
+    .readout button .lbl { display:inline-flex; align-items:center; gap:7px; }
+    .readout button .lbl .dot { width:9px; height:9px; border-radius:50%; flex:none; transition: background .15s; }
+    .readout button strong { font-weight:700; }
+    .readout button.off { opacity:.5; }
+    .readout button.off .lbl, .readout button.off strong { color: var(--muted); font-weight:500; }
+    .readout button.off .dot { background:#c4ccd9 !important; }
+    .readout button:hover { border-color:#cdd6e3; }
     .detail .kvs { display:grid; gap:10px; }
     .detail .kvs div { display:flex; justify-content:space-between; gap:10px; font-size:.9rem; padding-bottom:8px; border-bottom:1px solid var(--line); }
     .bottom-nav { position: sticky; bottom: 10px; display:flex; justify-content:center; margin-top: 14px; }
@@ -137,16 +144,19 @@
       .center-stage { min-height: 320px; }
     }
     @media (max-width: 620px) {
-      .top { flex-wrap:wrap; align-items:center; }
+      .shell { padding: 6px 10px 10px; }
+      .top { flex-wrap:nowrap; align-items:center; margin-bottom: 6px; gap: 8px; }
       .top-right { width:auto; }
-      .shell { padding: 10px; }
+      .brand { padding: 0; flex:1; min-width:0; }
+      .brand small { display:none; }
+      .brand h1 { font-size: 1.15rem; line-height:1.1; }
+      .ghost { padding: 5px 10px; font-size: .74rem; }
       .hero { padding: 4px; }
       .hero-main { min-height: 280px; padding: 2px 0; border-radius: 20px; }
       .center-stage { min-height: 260px; }
       .home-core { width: 118px; height: 118px; padding: 8px; }
-      .home-core .value { font-size: 1.45rem; }
+      .home-core .value { font-size: 1.45rem; margin: 2px 0; }
       .home-core .label, .home-core .sub { font-size: .66rem; }
-      .home-core .value { margin: 2px 0; }
       .floating-chip { display:none; }
       .orbit-metric { min-width: 72px; padding: 5px 7px; border-radius: 13px; }
       .orbit-metric .label { font-size: .58rem; margin-bottom:1px; }
@@ -156,12 +166,14 @@
       .orbit-vzev { left: 8px; top: 50%; transform: translateY(-50%); }
       .orbit-battery { left: 8px; bottom: 8px; }
       .orbit-leg { right: 8px; bottom: 8px; }
-      .card { border-radius: 24px; padding: 12px; }
+      .card { border-radius: 22px; padding: 12px; }
+      .layout { gap: 10px; }
+      .side { gap: 10px; }
       .timeline { padding: 10px; }
       .curve { height: 130px; margin-top: 6px; }
-      .series-toggles button { font-size: .7rem; padding: 4px 8px; }
-      .readout { grid-template-columns: repeat(2, 1fr); font-size: .74rem; }
-      .readout div { padding: 5px 8px; }
+      .readout { grid-template-columns: repeat(2, 1fr); font-size: .74rem; gap:5px; margin-top:8px; }
+      .readout button { padding: 6px 9px; }
+      .step-btn { width:26px; height:26px; font-size:1rem; }
       .seg button, .bottom-nav button { padding: 8px 12px; font-size: .85rem; }
       .bottom-nav { bottom: 6px; margin-top: 10px; }
       .bottom-nav .bar { padding: 6px; gap: 4px; }
@@ -176,7 +188,7 @@
         <h1>Energiefluss</h1>
       </div>
       <div class="top-right">
-        <div class="ghost" id="versionPill">Versionen · v14</div>
+        <div class="ghost" id="versionPill">Versionen · v15</div>
       </div>
     </div>
 
@@ -215,9 +227,15 @@
         </section>
 
         <section class="card timeline">
-          <div class="hero-head"><h2>Zeitprofil</h2><span id="timeLabel">14:25</span></div>
+          <div class="hero-head">
+            <div class="title-nav">
+              <button class="step-btn" id="stepPrev" onclick="stepTime(-1)" aria-label="zurück">‹</button>
+              <h2>Zeitprofil</h2>
+              <button class="step-btn" id="stepNext" onclick="stepTime(1)" aria-label="vor">›</button>
+            </div>
+            <span id="timeLabel">14:25</span>
+          </div>
           <div class="seg" id="resolutionTabs"></div>
-          <div class="series-toggles" id="seriesToggles"></div>
           <div class="curve" id="curveChart"></div>
           <div class="time-axis" id="timeAxis"></div>
           <input class="slider" id="timeSlider" type="range" min="0" max="5" value="3" />
@@ -266,6 +284,8 @@
       { key:'business', label:'Gewerbe',   color:'#7a8aa3', get: v => v.business }
     ];
     const activeSeries = new Set(['pv','house','battery','grid']);
+    const granularities = ['5 Min','10 Min','15 Min','Stunde','Tag','Monat'];
+    let activeGranularity = '5 Min';
 
     const details = {
       consumer: [['Hausverbrauch','12.9 kW'],['Heizung','4.1 kW'],['Mobilität','1.8 kW'],['Gewerbe','7.0 kW'],['größter Verbraucher','CNC Maschine'],['Versorgung','PV + Batterie']],
@@ -274,7 +294,7 @@
       grid: [['Netzbezug','0.0 kW'],['Einspeisung','4.7 kW'],['Öffentliches Netz','2.1 kW'],['vZEV','1.4 kW'],['LEG','1.2 kW'],['Status','ruhig']],
       leg: [['LEG Fluss','3.2 kW'],['Aktive Teilnehmer','3'],['Lokale Quote','81 %'],['Monatsvolumen','274 kWh'],['Top Teilnehmer','Haus A'],['Sichtbarkeit','sekundär']],
       vzev: [['vZEV Fluss','1.4 kW'],['Anschlüsse','4'],['Eigenverbrauch','78 %'],['Tagesvolumen','18.4 kWh'],['Status','aktiv'],['Sichtbarkeit','sekundär']],
-      versions: [['v14','Zeitprofil komplett überarbeitet: Toggle-Chips für PV/Haus/Batterie/Netz/LEG/vZEV/Heizung/Mobilität/Gewerbe, Uhrzeit-Achse, Werte-Tabelle am Schiebereglerpunkt'],['v13','Flussrichtung korrigiert: bei PV-Überschuss zeigen Batterie/Netz/LEG/vZEV vom Haus weg, bei Bezug zum Haus hin'],['v12','LEG und vZEV als feste Orbit-Pillen ergänzt, Batterie+SOC zu einer Pille kombiniert, ruhende Flusslinien gestrichelt'],['v11','Mobile-Layout deutlich kompakter: Haus-Kreis 118 px, schmalere Orbit-Pillen, Stage 260 px, Timeline und Bottom-Nav dichter'],['v10','Pfeilspitzen entglubt: feste Pixelgröße statt strokeWidth-Skalierung, Pfade enden bündig am Kreis, schlankere Linien'],['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
+      versions: [['v15','Header schlanker, Werte-Tabelle dient zugleich als An/Aus-Schalter pro Serie, Schritt-Pfeile zurück/vor neben "Zeitprofil", Auflösung-Tabs anklickbar (5/10/15 Min, Stunde, Tag, Monat)'],['v14','Zeitprofil komplett überarbeitet: Toggle-Chips für PV/Haus/Batterie/Netz/LEG/vZEV/Heizung/Mobilität/Gewerbe, Uhrzeit-Achse, Werte-Tabelle am Schiebereglerpunkt'],['v13','Flussrichtung korrigiert: bei PV-Überschuss zeigen Batterie/Netz/LEG/vZEV vom Haus weg, bei Bezug zum Haus hin'],['v12','LEG und vZEV als feste Orbit-Pillen ergänzt, Batterie+SOC zu einer Pille kombiniert, ruhende Flusslinien gestrichelt'],['v11','Mobile-Layout deutlich kompakter: Haus-Kreis 118 px, schmalere Orbit-Pillen, Stage 260 px, Timeline und Bottom-Nav dichter'],['v10','Pfeilspitzen entglubt: feste Pixelgröße statt strokeWidth-Skalierung, Pfade enden bündig am Kreis, schlankere Linien'],['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
     };
 
     const participants = [
@@ -389,15 +409,13 @@
     }
 
     function renderTimeline() {
-      document.getElementById('resolutionTabs').innerHTML = ['5 Min','10 Min','Stunde','Tag','Woche','Monat'].map((r,i)=>`<button class="${i===0?'active':''}">${r}</button>`).join('');
-
-      document.getElementById('seriesToggles').innerHTML = seriesDefs.map(s =>
-        `<button class="${activeSeries.has(s.key)?'active':''}" onclick="toggleSeries('${s.key}')"><span class="dot" style="background:${s.color}"></span>${s.label}</button>`
+      document.getElementById('resolutionTabs').innerHTML = granularities.map(r =>
+        `<button class="${r===activeGranularity?'active':''}" onclick="setGranularity('${r}')">${r}</button>`
       ).join('');
 
       const timeViews = views.slice(0,6);
       const visible = seriesDefs.filter(s => activeSeries.has(s.key));
-      const maxY = Math.max(0.1, ...visible.flatMap(s => timeViews.map(v => s.get(v))));
+      const maxY = Math.max(0.1, ...(visible.length?visible:seriesDefs).flatMap(s => timeViews.map(v => s.get(v))));
 
       const W = 620, H = 170, PX = 28, PY = 14;
       const xAt = i => PX + i * (W - 2*PX) / 5;
@@ -422,6 +440,9 @@
 
       document.getElementById('timeAxis').innerHTML = timeViews.map(v => `<span>${v.time}</span>`).join('');
 
+      document.getElementById('stepPrev').disabled = active <= 0;
+      document.getElementById('stepNext').disabled = active >= 5;
+
       renderReadout();
     }
 
@@ -431,14 +452,29 @@
       renderTimeline();
     }
 
+    function setGranularity(g) {
+      activeGranularity = g;
+      renderTimeline();
+    }
+
+    function stepTime(delta) {
+      const next = Math.max(0, Math.min(5, active + delta));
+      if (next === active) return;
+      active = next;
+      document.getElementById('timeSlider').value = String(active);
+      renderMain();
+      renderTimeline();
+    }
+
     function renderReadout() {
       const v = views[Math.min(active, 5)];
-      const unit = 'kW';
-      const visible = seriesDefs.filter(s => activeSeries.has(s.key));
-      const items = visible.length ? visible : [{ key:'_', label:'keine Auswahl', color:'#c4ccd9', get:()=>0 }];
-      document.getElementById('profileReadout').innerHTML = items.map(s =>
-        `<div><span class="lbl"><span class="dot" style="background:${s.color}"></span>${s.label}</span><strong>${s.get(v).toFixed(1)} ${unit}</strong></div>`
-      ).join('');
+      document.getElementById('profileReadout').innerHTML = seriesDefs.map(s => {
+        const on = activeSeries.has(s.key);
+        return `<button class="${on?'':'off'}" onclick="toggleSeries('${s.key}')">
+          <span class="lbl"><span class="dot" style="background:${s.color}"></span>${s.label}</span>
+          <strong>${s.get(v).toFixed(1)} kW</strong>
+        </button>`;
+      }).join('');
     }
 
     function renderBottomNav() {
