@@ -188,7 +188,7 @@
         <h1>Energiefluss</h1>
       </div>
       <div class="top-right">
-        <div class="ghost" id="versionPill">Versionen · v16</div>
+        <div class="ghost" id="versionPill">Versionen · v17</div>
       </div>
     </div>
 
@@ -276,6 +276,7 @@
       { key:'pv',       label:'PV',        color:'#f8c64e', get: v => v.pv },
       { key:'house',    label:'Verbrauch', color:'#4fd18e', get: v => v.house },
       { key:'battery',  label:'Batterie',  color:'#4b7cff', get: v => Math.abs(v.battery) },
+      { key:'soc',      label:'SOC',       color:'#0aa1a1', get: v => v.soc, unit:'%' },
       { key:'grid',     label:'Netz',      color:'#f55e68', get: v => Math.max(v.grid, v.export) },
       { key:'leg',      label:'LEG',       color:'#8d6dff', get: v => v.leg },
       { key:'vzev',     label:'vZEV',      color:'#ff9c49', get: v => v.vzev },
@@ -372,7 +373,7 @@
       grid: [['Netzbezug','0.0 kW'],['Einspeisung','4.7 kW'],['Öffentliches Netz','2.1 kW'],['vZEV','1.4 kW'],['LEG','1.2 kW'],['Status','ruhig']],
       leg: [['LEG Fluss','3.2 kW'],['Aktive Teilnehmer','3'],['Lokale Quote','81 %'],['Monatsvolumen','274 kWh'],['Top Teilnehmer','Haus A'],['Sichtbarkeit','sekundär']],
       vzev: [['vZEV Fluss','1.4 kW'],['Anschlüsse','4'],['Eigenverbrauch','78 %'],['Tagesvolumen','18.4 kWh'],['Status','aktiv'],['Sichtbarkeit','sekundär']],
-      versions: [['v16','Auflösung wirkt jetzt echt: 5/10/15 Min und Stunde zeigen interpolierte Werte um 14:25, Tag liefert 7-Tage-Reihe, Monat 12-Monate-Reihe; Einheit wechselt zu kWh bei Aggregaten'],['v15','Header schlanker, Werte-Tabelle dient zugleich als An/Aus-Schalter pro Serie, Schritt-Pfeile zurück/vor neben "Zeitprofil", Auflösung-Tabs anklickbar (5/10/15 Min, Stunde, Tag, Monat)'],['v14','Zeitprofil komplett überarbeitet: Toggle-Chips für PV/Haus/Batterie/Netz/LEG/vZEV/Heizung/Mobilität/Gewerbe, Uhrzeit-Achse, Werte-Tabelle am Schiebereglerpunkt'],['v13','Flussrichtung korrigiert: bei PV-Überschuss zeigen Batterie/Netz/LEG/vZEV vom Haus weg, bei Bezug zum Haus hin'],['v12','LEG und vZEV als feste Orbit-Pillen ergänzt, Batterie+SOC zu einer Pille kombiniert, ruhende Flusslinien gestrichelt'],['v11','Mobile-Layout deutlich kompakter: Haus-Kreis 118 px, schmalere Orbit-Pillen, Stage 260 px, Timeline und Bottom-Nav dichter'],['v10','Pfeilspitzen entglubt: feste Pixelgröße statt strokeWidth-Skalierung, Pfade enden bündig am Kreis, schlankere Linien'],['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
+      versions: [['v17','SOC als eigene Serie im Zeitprofil mit eigener 0–100 % Skala, gestrichelte Linie, Wert in % statt kW'],['v16','Auflösung wirkt jetzt echt: 5/10/15 Min und Stunde zeigen interpolierte Werte um 14:25, Tag liefert 7-Tage-Reihe, Monat 12-Monate-Reihe; Einheit wechselt zu kWh bei Aggregaten'],['v15','Header schlanker, Werte-Tabelle dient zugleich als An/Aus-Schalter pro Serie, Schritt-Pfeile zurück/vor neben "Zeitprofil", Auflösung-Tabs anklickbar (5/10/15 Min, Stunde, Tag, Monat)'],['v14','Zeitprofil komplett überarbeitet: Toggle-Chips für PV/Haus/Batterie/Netz/LEG/vZEV/Heizung/Mobilität/Gewerbe, Uhrzeit-Achse, Werte-Tabelle am Schiebereglerpunkt'],['v13','Flussrichtung korrigiert: bei PV-Überschuss zeigen Batterie/Netz/LEG/vZEV vom Haus weg, bei Bezug zum Haus hin'],['v12','LEG und vZEV als feste Orbit-Pillen ergänzt, Batterie+SOC zu einer Pille kombiniert, ruhende Flusslinien gestrichelt'],['v11','Mobile-Layout deutlich kompakter: Haus-Kreis 118 px, schmalere Orbit-Pillen, Stage 260 px, Timeline und Bottom-Nav dichter'],['v10','Pfeilspitzen entglubt: feste Pixelgröße statt strokeWidth-Skalierung, Pfade enden bündig am Kreis, schlankere Linien'],['v9','Mobile-Cleanup: Flusslinien dynamisch am Haus-Kreis verankert, tote Doppel-Karten entfernt, Tab-Reihen scrollbar'],['v8','Layout kompakter: weniger Weissraum, Orbit-Elemente enger, Navigation dichter'],['v7','Doppelte Werte entfernt: Seitenkarten ausgeblendet, Batterie als Orbit-Wert'],['v6','Haus-Kreis nochmals verkleinert'],['v5','Haus-Kreis kleiner und Orbit-Werte auf aktuelle Leistung statt Tageswerte umgestellt'],['v4','Versionsverlauf oben rechts sichtbar, Uhrzeit entfernt'],['v3','Versionsanzeige aus Hauptscreen entfernt und Live-Stand aktiviert'],['v2','Tageswerte aus Karten in den Energiefluss rund ums Haus verschoben'],['v1','Hauptscreen radikal vereinfacht'],['Status','UI only']]
     };
 
     const participants = [
@@ -495,26 +496,31 @@
       const pts = chartPoints;
       const N = pts.length;
       const visible = seriesDefs.filter(s => activeSeries.has(s.key));
-      const seriesForScale = visible.length ? visible : seriesDefs;
-      const maxY = Math.max(0.1, ...seriesForScale.flatMap(s => pts.map(p => s.get(p))));
+      const energyVisible = visible.filter(s => s.unit !== '%');
+      const energyScale = energyVisible.length ? energyVisible : seriesDefs.filter(s => s.unit !== '%');
+      const maxY = Math.max(0.1, ...energyScale.flatMap(s => pts.map(p => s.get(p))));
 
       const W = 620, H = 170, PX = 28, PY = 14;
       const xAt = i => N <= 1 ? W/2 : PX + i * (W - 2*PX) / (N-1);
-      const yAt = val => H - PY - (val/maxY) * (H - 2*PY - 6);
+      const yEnergy = val => H - PY - (val/maxY) * (H - 2*PY - 6);
+      const yPct = val => H - PY - (val/100) * (H - 2*PY - 6);
+      const yFor = s => s.unit === '%' ? yPct : yEnergy;
 
       const gridLines = [0.25,0.5,0.75,1].map(f =>
         `<line x1="0" y1="${(H-PY) - f*(H-2*PY-6)}" x2="${W}" y2="${(H-PY) - f*(H-2*PY-6)}" stroke="#6f84a3" opacity=".11"/>`
       ).join('');
 
       const lines = visible.map(s => {
-        const points = pts.map((p,i) => `${xAt(i).toFixed(0)},${yAt(s.get(p)).toFixed(0)}`).join(' ');
-        return `<polyline fill="none" stroke="${s.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${points}" opacity=".92"/>`;
+        const yFn = yFor(s);
+        const points = pts.map((p,i) => `${xAt(i).toFixed(0)},${yFn(s.get(p)).toFixed(0)}`).join(' ');
+        const dash = s.unit === '%' ? ' stroke-dasharray="6 4"' : '';
+        return `<polyline fill="none" stroke="${s.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${points}" opacity=".92"${dash}/>`;
       }).join('');
 
       const cIdx = Math.min(Math.max(active,0), N-1);
       const cx = xAt(cIdx);
       const cursor = `<line x1="${cx}" x2="${cx}" y1="${PY-4}" y2="${H-PY+4}" stroke="var(--battery)" stroke-width="2" stroke-dasharray="4 6" opacity=".7"/>` +
-        visible.map(s => `<circle cx="${cx}" cy="${yAt(s.get(pts[cIdx])).toFixed(0)}" r="3.5" fill="${s.color}" stroke="#fff" stroke-width="2"/>`).join('');
+        visible.map(s => `<circle cx="${cx}" cy="${yFor(s)(s.get(pts[cIdx])).toFixed(0)}" r="3.5" fill="${s.color}" stroke="#fff" stroke-width="2"/>`).join('');
 
       document.getElementById('curveChart').innerHTML =
         `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${gridLines}${lines}${cursor}</svg>`;
@@ -560,12 +566,14 @@
 
     function renderReadout() {
       const v = chartPoints[active];
-      const unit = currentUnit();
+      const energyUnit = currentUnit();
       document.getElementById('profileReadout').innerHTML = seriesDefs.map(s => {
         const on = activeSeries.has(s.key);
+        const unit = s.unit === '%' ? '%' : energyUnit;
+        const val = s.unit === '%' ? Math.round(s.get(v)) : s.get(v).toFixed(1);
         return `<button class="${on?'':'off'}" onclick="toggleSeries('${s.key}')">
           <span class="lbl"><span class="dot" style="background:${s.color}"></span>${s.label}</span>
-          <strong>${s.get(v).toFixed(1)} ${unit}</strong>
+          <strong>${val} ${unit}</strong>
         </button>`;
       }).join('');
     }
